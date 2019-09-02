@@ -229,19 +229,14 @@ IEex_Init PROC C arg:VARARG
     Invoke LogMessage, CTEXT("Register Function -  IEex_Call"), LOG_NONEWLINE, 1
     Invoke LogMessageAndHexValue, 0, Addr IEex_Call
     ENDIF
-;
-;    Invoke IEexLuaRegisterFunction, Addr IEex_AddressList, Addr szIEex_AddressList
-;    IFDEF IEEX_LOGGING
-;    .IF gIEexLog >= LOGLEVEL_DEBUG
-;        Invoke LogMessage, CTEXT("Register Function -  IEex_AddressList"), LOG_NONEWLINE, 1
-;        Invoke LogMessageAndHexValue, 0, Addr IEex_AddressList
-;    .ENDIF
-;    ENDIF
 
-
-
-
-
+    Invoke IEexLuaRegisterFunction, Addr IEex_AddressList, Addr szIEex_AddressList
+    IFDEF IEEX_LOGGING
+    .IF gIEexLog >= LOGLEVEL_DEBUG
+        Invoke LogMessage, CTEXT("Register Function -  IEex_AddressList"), LOG_NONEWLINE, 1
+        Invoke LogMessageAndHexValue, 0, Addr IEex_AddressList
+    .ENDIF
+    ENDIF
 
 ;    Invoke IEexLuaRegisterFunction, Addr IEex_ReadDWORD, Addr szIEex_ReadDWORD
 ;    IFDEF IEEX_LOGGING
@@ -250,22 +245,7 @@ IEex_Init PROC C arg:VARARG
 ;        Invoke LogMessageAndHexValue, 0, Addr IEex_ReadDWORD
 ;    .ENDIF
 ;    ENDIF
-    
-;    Invoke IEexLuaRegisterFunction, Addr IEex_AddressListAsm, Addr szIEex_AddressListAsm
-;    IFDEF IEEX_LOGGING
-;    .IF gIEexLog >= LOGLEVEL_DEBUG
-;        Invoke LogMessage, CTEXT("Register Function -  IEex_AddressListAsm"), LOG_NONEWLINE, 1
-;        Invoke LogMessageAndHexValue, 0, Addr IEex_AddressListAsm
-;    .ENDIF
-;    ENDIF    
-;    
-;    Invoke IEexLuaRegisterFunction, Addr IEex_AddressListCount, Addr szIEex_AddressListCount
-;    IFDEF IEEX_LOGGING
-;    .IF gIEexLog >= LOGLEVEL_DEBUG
-;        Invoke LogMessage, CTEXT("Register Function -  IEex_AddressListCount"), LOG_NONEWLINE, 1
-;        Invoke LogMessageAndHexValue, 0, Addr IEex_AddressListCount
-;    .ENDIF
-;    ENDIF      
+   
 
     IFDEF IEEX_LOGGING
     .IF gIEexLog >= LOGLEVEL_DEBUG
@@ -549,16 +529,7 @@ IEEX_ALIGN
 ; IEex_AddressList()
 ;------------------------------------------------------------------------------
 IEex_AddressList PROC C USES EBX lua_State:DWORD
-    LOCAL nPattern:DWORD
-    LOCAL ptrCurrentPattern:DWORD
-    LOCAL lpszPatternName:DWORD
-    LOCAL dwPatternAddress:DWORD
-    LOCAL nTotal:DWORD
-    LOCAL nCount:DWORD
-    LOCAL pT2Array:DWORD
-    LOCAL pT2Entry:DWORD
     LOCAL qwAddress:QWORD
-    LOCAL qwIndex:QWORD
     
     IFDEF IEEX_LOGGING
     IFDEF IEEX_LOGLUACALLS
@@ -568,92 +539,182 @@ IEex_AddressList PROC C USES EBX lua_State:DWORD
     ENDIF
     ENDIF
     
-;    mov eax, TotalPatterns
-;    add eax, 3 ; for extra at end
-;    Invoke F_Lua_createtable, lua_State, 0, eax
-;
-;    mov ebx, PatternsDatabase
-;    mov ptrCurrentPattern, ebx
-;    mov nPattern, 0
-;    mov eax, 0
-;    .WHILE eax < TotalPatterns
-;        .IF [ebx].PATTERN.bFound == TRUE
-;            mov eax, [ebx].PATTERN.PatName
-;            mov lpszPatternName, eax
-;            
-;            .IF [ebx].PATTERN.PatType == 2
-;                ;--------------------------------------------------------------
-;                ; Handle type 2 pattern: name=table/array of addresses
-;                ;--------------------------------------------------------------
-;                mov eax, [ebx].PATTERN.VerAdj ; used to store count of array entries
-;                mov nTotal, eax
-;                mov eax, [ebx].PATTERN.PatAddress ; used to store pointer to array
-;                .IF eax != NULL && nTotal != 0
-;                    mov pT2Array, eax
-;                    mov pT2Entry, eax
-;                    
-;                    Invoke F_Lua_pushstring, lua_State, lpszPatternName
-;                    Invoke F_Lua_createtable, lua_State, 0, nCount
-;                    mov nCount, 0
-;                    mov eax, 0
-;                    .WHILE eax < nTotal
-;                        mov ebx, pT2Entry
-;                        mov eax, [ebx]
-;                        mov dwPatternAddress, eax
-;                        
-;                        inc nCount ; for lua 1 based indexes
-;                        fild nCount
-;                        dec nCount ; restore nCount to its proper value for loop condition
-;                        fstp qword ptr [qwIndex]
-;                        Invoke F_Lua_pushnumber, lua_State, qwIndex
-;                        fild dwPatternAddress
-;                        fstp qword ptr [qwAddress]            
-;                        Invoke F_Lua_pushnumber, lua_State, qwAddress ; dwPatternAddress
-;                        Invoke F_Lua_settable, lua_State, -3
-;                        
-;                        add pT2Entry, SIZEOF DWORD
-;                        inc nCount
-;                        mov eax, nCount
-;                    .ENDW
-;                    Invoke F_Lua_settable, lua_State, -3
-;                    
-;                .ENDIF
-;                
-;            .ELSE
-;                ;--------------------------------------------------------------
-;                ; Handle all other pattern types: name=address / var=value
-;                ;--------------------------------------------------------------
-;                mov eax, [ebx].PATTERN.PatAddress
-;                mov dwPatternAddress, eax
-;                Invoke F_Lua_pushstring, lua_State, lpszPatternName
-;                fild dwPatternAddress
-;                fstp qword ptr [qwAddress]            
-;                Invoke F_Lua_pushnumber, lua_State, qwAddress ; dwPatternAddress
-;                Invoke F_Lua_settable, lua_State, -3
-;            .ENDIF
-;            
-;        .ENDIF
-;        add ptrCurrentPattern, SIZEOF PATTERN
-;        mov ebx, ptrCurrentPattern
-;        inc nPattern
-;        mov eax, nPattern
-;    .ENDW
+    Invoke F_Lua_createtable, lua_State, 0, 30
 
-    ; handle special cases, like GetProcAddress, LoadLibrary etc
     Invoke F_Lua_pushstring, lua_State, Addr szGetProcAddress
     fild F_GetProcAddress
-    fstp qword ptr [qwAddress]      
-    Invoke F_Lua_pushnumber, lua_State, qwAddress ; F_GetProcAddress
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
     Invoke F_Lua_settable, lua_State, -3
     
     Invoke F_Lua_pushstring, lua_State, Addr szLoadLibrary
     fild F_LoadLibrary
     fstp qword ptr [qwAddress]     
-    Invoke F_Lua_pushnumber, lua_State, qwAddress ; F_LoadLibrary
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
     Invoke F_Lua_settable, lua_State, -3
-    
-    ;Invoke F_Lua_setglobal, lua_State, Addr szIEex_LuaAddressList
-    
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("__ftol2_sse")
+    fild F__ftol2_sse
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_luaL_newstate")
+    fild F_LuaL_newstate
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_luaL_openlibs")
+    fild F_LuaL_openlibs
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_luaL_loadfilex") 
+    fild F_LuaL_loadfilex
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_createtable") 
+    fild F_Lua_createtable
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_getglobal") 
+    fild F_Lua_getglobal
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_gettop") 
+    fild F_Lua_gettop
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pcallk") 
+    fild F_Lua_pcallk
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pushcclosure") 
+    fild F_Lua_pushcclosure
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pushlightuserdata") 
+    fild F_Lua_pushlightuserdata
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pushlstring") 
+    fild F_Lua_pushlstring
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pushnumber") 
+    fild F_Lua_pushnumber
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pushstring") 
+    fild F_Lua_pushstring
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_rawgeti") 
+    fild F_Lua_rawgeti
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_rawlen") 
+    fild F_Lua_rawlen
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_setfield") 
+    fild F_Lua_setfield
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_setglobal") 
+    fild F_Lua_setglobal
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_settable") 
+    fild F_Lua_settable
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_settop") 
+    fild F_Lua_settop
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_toboolean") 
+    fild F_Lua_toboolean
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_tolstring") 
+    fild F_Lua_tolstring
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_tonumberx") 
+    fild F_Lua_tonumberx
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_touserdata") 
+    fild F_Lua_touserdata
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_type") 
+    fild F_Lua_type
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_typename") 
+    fild F_Lua_typename
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_luaL_loadstring") 
+    fild F_LuaL_loadstring
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_g_lua") 
+    fild g_lua
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
     mov eax, 1
     ret
 IEex_AddressList ENDP
