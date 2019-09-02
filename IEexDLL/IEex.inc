@@ -130,6 +130,8 @@ szLoadLibrary           DB "__imp__LoadLibraryA",0
 szGetProcAddressProc    DB "GetProcAddress",0
 szLoadLibraryProc       DB "LoadLibraryA",0
 sz_ftol2_sse            DB "_ftol2_sse",0
+sz_malloc               DB "malloc",0
+sz_free                 DB "free",0
 szKernel32Dll           DB "kernel32.dll",0
 szMsvcrtDll             DB "msvcrt.dll",0
 
@@ -172,6 +174,12 @@ ENDIF
 ; Lua Function pointers
 ;---------------------------
 ; typedef prototypes:
+LuaL_newstateProto      TYPEDEF PROTO C
+LuaL_newstatePtr        TYPEDEF PTR LuaL_newstateProto
+LuaL_openlibsProto      TYPEDEF PROTO C luastate:DWORD
+LuaL_openlibsPtr        TYPEDEF PTR LuaL_openlibsProto
+LuaL_loadfilexProto     TYPEDEF PROTO C luastate:DWORD, filename:DWORD, mode:DWORD
+LuaL_loadfilexPtr       TYPEDEF PTR LuaL_loadfilexProto
 Lua_createtableProto    TYPEDEF PROTO C :VARARG ;luastate:DWORD, narr:DWORD, nrec:DWORD
 Lua_createtablePtr      TYPEDEF PTR Lua_createtableProto
 Lua_createtablexProto   TYPEDEF PROTO C :VARARG ;luastate:DWORD ; override for no narr and nrec params of lua_createtable
@@ -218,17 +226,19 @@ Lua_typenameProto       TYPEDEF PROTO C luastate:DWORD, tp:DWORD
 Lua_typenamePtr         TYPEDEF PTR Lua_typenameProto
 LuaL_loadstringProto    TYPEDEF PROTO C :VARARG ;luastate:DWORD, ptr_string:DWORD
 LuaL_loadstringPtr      TYPEDEF PTR LuaL_loadstringProto
+
 ftol2_sseProto          TYPEDEF PROTO C :VARARG
 ftol2_ssePtr            TYPEDEF PTR ftol2_sseProto
+MallocProto             TYPEDEF PROTO C :VARARG
+MallocPtr               TYPEDEF PTR MallocProto
+FreeProto               TYPEDEF PROTO C :VARARG
+FreePtr                 TYPEDEF PTR FreeProto
 
-LuaL_newstateProto      TYPEDEF PROTO C
-LuaL_newstatePtr        TYPEDEF PTR LuaL_newstateProto
-LuaL_openlibsProto      TYPEDEF PROTO C luastate:DWORD
-LuaL_openlibsPtr        TYPEDEF PTR LuaL_openlibsProto
-LuaL_loadfilexProto     TYPEDEF PROTO C luastate:DWORD, filename:DWORD, mode:DWORD
-LuaL_loadfilexPtr       TYPEDEF PTR LuaL_loadfilexProto
 
 ; Lua function pointers
+F_LuaL_newstate         LuaL_newstatePtr 0
+F_LuaL_openlibs         LuaL_openlibsPtr 0
+F_LuaL_loadfilex        LuaL_loadfilexPtr 0
 F_Lua_createtable       Lua_createtablePtr 0
 F_Lua_createtablex      Lua_createtablexPtr 0 ; override for no params of lua_createtable
 F_Lua_getglobal         Lua_getglobalPtr 0
@@ -252,11 +262,12 @@ F_Lua_touserdata        Lua_touserdataPtr 0
 F_Lua_type              Lua_typePtr 0
 F_Lua_typename          Lua_typenamePtr 0
 F_LuaL_loadstring       LuaL_loadstringPtr 0
-F__ftol2_sse            ftol2_ssePtr 0
 
-F_LuaL_newstate         LuaL_newstatePtr 0
-F_LuaL_openlibs         LuaL_openlibsPtr 0
-F_LuaL_loadfilex        LuaL_loadfilexPtr 0
+F__ftol2_sse            ftol2_ssePtr 0
+F_Malloc                MallocPtr 0
+F_Free                  FreePtr 0
+
+
 
 ;---------------------------
 ; Module and section info

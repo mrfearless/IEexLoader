@@ -539,7 +539,7 @@ IEex_AddressList PROC C USES EBX lua_State:DWORD
     ENDIF
     ENDIF
     
-    Invoke F_Lua_createtable, lua_State, 0, 30
+    Invoke F_Lua_createtable, lua_State, 0, 34
 
     Invoke F_Lua_pushstring, lua_State, Addr szGetProcAddress
     fild F_GetProcAddress
@@ -555,6 +555,18 @@ IEex_AddressList PROC C USES EBX lua_State:DWORD
 
     Invoke F_Lua_pushstring, lua_State, CTEXT("__ftol2_sse")
     fild F__ftol2_sse
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_malloc")
+    fild F_Malloc
+    fstp qword ptr [qwAddress]
+    Invoke F_Lua_pushnumber, lua_State, qwAddress
+    Invoke F_Lua_settable, lua_State, -3
+
+    Invoke F_Lua_pushstring, lua_State, CTEXT("_free")
+    fild F_Free
     fstp qword ptr [qwAddress]
     Invoke F_Lua_pushnumber, lua_State, qwAddress
     Invoke F_Lua_settable, lua_State, -3

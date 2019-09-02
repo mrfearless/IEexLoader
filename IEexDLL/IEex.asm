@@ -263,18 +263,23 @@ IEexInitGlobals PROC USES EBX
     Invoke GetProcAddress, hKernel32, Addr szLoadLibraryProc
     mov F_LoadLibrary, eax
     
+    ; MSVCRT.DLL Functions:
     Invoke GetModuleHandle, Addr szMsvcrtDll
     mov hMsvcrt, eax
     Invoke GetProcAddress, hMsvcrt, Addr sz_ftol2_sse
     mov F__ftol2_sse, eax
-    
-    ; get proc address of _ftol2_sse from msvcrt.dll
+    Invoke GetProcAddress, hMsvcrt, Addr sz_malloc
+    mov F_Malloc, eax
+    Invoke GetProcAddress, hMsvcrt, Addr sz_free
+    mov F_Free, eax
 
     IFDEF DEBUG32
     PrintText 'Api calls and exports'
     PrintDec F_GetProcAddress
     PrintDec F_LoadLibrary
     PrintDec F__ftol2_sse
+    PrintDec F_Malloc
+    PrintDec F_Free
     ENDIF
 
     ;--------------------------------------------------------------------------
