@@ -1,0 +1,17 @@
+bak/
+*.undo
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.bak
+Help/
+template/
+downloads/
+screenshots/
+Debug/
+wiki/
+version/
+releases/
+go.bat
+package_releases.bat

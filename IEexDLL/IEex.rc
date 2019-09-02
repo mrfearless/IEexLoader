@@ -1,0 +1,2 @@
+#include "Res/IEexVer.rc"
+#include "Res/IEexRes.rc"
