@@ -285,10 +285,10 @@ IEexInitGlobals PROC USES EBX
     ;--------------------------------------------------------------------------
     ; Get addresses of lua functions
     ;--------------------------------------------------------------------------
-    IFDEF IEEX_LUALIB ; USE LUA.LIB
-    IFDEF DEBUG32
-    PrintText 'Using LUA.LIB'
-    ENDIF
+;    IFDEF IEEX_LUALIB ; USE LUA.LIB
+;    IFDEF DEBUG32
+;    PrintText 'Using LUA.LIB'
+;    ENDIF
     lea eax, luaL_newstate
     mov F_LuaL_newstate, eax
     lea eax, luaL_openlibs
@@ -342,83 +342,83 @@ IEexInitGlobals PROC USES EBX
     lea eax, luaL_loadstring
     mov F_LuaL_loadstring, eax
     
-    ELSE ; USE LUA52.DLL
-    IFDEF DEBUG32
-    PrintText 'Using LUA52.DLL'
-    ENDIF
-    Invoke LoadLibrary, Addr szLuaDLL
-    .IF eax == NULL
-        IFDEF IEEX_LOGGING
-        .IF gIEexLog > LOGLEVEL_NONE
-            Invoke LogOpen, FALSE
-            Invoke LogMessage, Addr szErrorLuaDll, LOG_ERROR, 0 ; CTEXT("Cannot load or find lua.dll - aborting.")
-            Invoke LogClose
-        .ENDIF
-        ENDIF
-        .IF gIEexMsg == TRUE
-            Invoke MessageBox, 0, Addr szErrorLuaDll, Addr AppName, MB_OK
-        .ENDIF
-        mov eax, FALSE
-        ret
-    .ENDIF
-    mov hLua, eax
-    IFDEF DEBUG32
-    PrintDec hLua
-    ENDIF
-    Invoke GetProcAddress, hLua, Addr szLuaL_newstate
-    mov F_LuaL_newstate, eax
-    Invoke GetProcAddress, hLua, Addr szLuaL_openlibs
-    mov F_LuaL_openlibs, eax
-    Invoke GetProcAddress, hLua, Addr szLuaL_loadfilex
-    mov F_LuaL_loadfilex, eax
-    
-    Invoke GetProcAddress, hLua, Addr szLua_createtable
-    mov F_Lua_createtable, eax
-    mov F_Lua_createtablex, eax
-    Invoke GetProcAddress, hLua, Addr szLua_getglobal
-    mov F_Lua_getglobal, eax
-    Invoke GetProcAddress, hLua, Addr szLua_gettop
-    mov F_Lua_gettop, eax
-    Invoke GetProcAddress, hLua, Addr szLua_pcallk
-    mov F_Lua_pcallk, eax
-    Invoke GetProcAddress, hLua, Addr szLua_pushcclosure
-    mov F_Lua_pushcclosure, eax
-    Invoke GetProcAddress, hLua, Addr szLua_pushlightuserdata
-    mov F_Lua_pushlightuserdata, eax
-    Invoke GetProcAddress, hLua, Addr szLua_pushlstring
-    mov F_Lua_pushlstring, eax
-    Invoke GetProcAddress, hLua, Addr szLua_pushnumber
-    mov F_Lua_pushnumber, eax
-    Invoke GetProcAddress, hLua, Addr szLua_pushstring
-    mov F_Lua_pushstring, eax
-    Invoke GetProcAddress, hLua, Addr szLua_rawgeti
-    mov F_Lua_rawgeti, eax
-    Invoke GetProcAddress, hLua, Addr szLua_rawlen
-    mov F_Lua_rawlen, eax
-    Invoke GetProcAddress, hLua, Addr szLua_setfield
-    mov F_Lua_setfield, eax
-    Invoke GetProcAddress, hLua, Addr szLua_setglobal
-    mov F_Lua_setglobal, eax
-    Invoke GetProcAddress, hLua, Addr szLua_settable
-    mov F_Lua_settable, eax
-    Invoke GetProcAddress, hLua, Addr szLua_settop
-    mov F_Lua_settop, eax
-    Invoke GetProcAddress, hLua, Addr szLua_toboolean
-    mov F_Lua_toboolean, eax
-    Invoke GetProcAddress, hLua, Addr szLua_tolstring
-    mov F_Lua_tolstring, eax
-    Invoke GetProcAddress, hLua, Addr szLua_tonumberx
-    mov F_Lua_tonumberx, eax
-    Invoke GetProcAddress, hLua, Addr szLua_touserdata
-    mov F_Lua_touserdata, eax
-    Invoke GetProcAddress, hLua, Addr szLua_type
-    mov F_Lua_type, eax
-    Invoke GetProcAddress, hLua, Addr szLua_typename
-    mov F_Lua_typename, eax
-    Invoke GetProcAddress, hLua, Addr szLuaL_loadstring
-    mov F_LuaL_loadstring, eax
-    
-    ENDIF
+;    ELSE ; USE LUA52.DLL
+;    IFDEF DEBUG32
+;    PrintText 'Using LUA52.DLL'
+;    ENDIF
+;    Invoke LoadLibrary, Addr szLuaDLL
+;    .IF eax == NULL
+;        IFDEF IEEX_LOGGING
+;        .IF gIEexLog > LOGLEVEL_NONE
+;            Invoke LogOpen, FALSE
+;            Invoke LogMessage, Addr szErrorLuaDll, LOG_ERROR, 0 ; CTEXT("Cannot load or find lua.dll - aborting.")
+;            Invoke LogClose
+;        .ENDIF
+;        ENDIF
+;        .IF gIEexMsg == TRUE
+;            Invoke MessageBox, 0, Addr szErrorLuaDll, Addr AppName, MB_OK
+;        .ENDIF
+;        mov eax, FALSE
+;        ret
+;    .ENDIF
+;    mov hLua, eax
+;    IFDEF DEBUG32
+;    PrintDec hLua
+;    ENDIF
+;    Invoke GetProcAddress, hLua, Addr szLuaL_newstate
+;    mov F_LuaL_newstate, eax
+;    Invoke GetProcAddress, hLua, Addr szLuaL_openlibs
+;    mov F_LuaL_openlibs, eax
+;    Invoke GetProcAddress, hLua, Addr szLuaL_loadfilex
+;    mov F_LuaL_loadfilex, eax
+;    
+;    Invoke GetProcAddress, hLua, Addr szLua_createtable
+;    mov F_Lua_createtable, eax
+;    mov F_Lua_createtablex, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_getglobal
+;    mov F_Lua_getglobal, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_gettop
+;    mov F_Lua_gettop, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_pcallk
+;    mov F_Lua_pcallk, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_pushcclosure
+;    mov F_Lua_pushcclosure, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_pushlightuserdata
+;    mov F_Lua_pushlightuserdata, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_pushlstring
+;    mov F_Lua_pushlstring, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_pushnumber
+;    mov F_Lua_pushnumber, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_pushstring
+;    mov F_Lua_pushstring, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_rawgeti
+;    mov F_Lua_rawgeti, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_rawlen
+;    mov F_Lua_rawlen, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_setfield
+;    mov F_Lua_setfield, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_setglobal
+;    mov F_Lua_setglobal, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_settable
+;    mov F_Lua_settable, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_settop
+;    mov F_Lua_settop, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_toboolean
+;    mov F_Lua_toboolean, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_tolstring
+;    mov F_Lua_tolstring, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_tonumberx
+;    mov F_Lua_tonumberx, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_touserdata
+;    mov F_Lua_touserdata, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_type
+;    mov F_Lua_type, eax
+;    Invoke GetProcAddress, hLua, Addr szLua_typename
+;    mov F_Lua_typename, eax
+;    Invoke GetProcAddress, hLua, Addr szLuaL_loadstring
+;    mov F_LuaL_loadstring, eax
+;    
+;    ENDIF
 
     mov eax, TRUE
     ret

@@ -20,7 +20,13 @@ IFDEF IEEX_LUALIB
 include lua52.inc
 includelib lua523.lib ; nil value for lua_setglobal
 includelib msvcrt12.lib
+ELSE ; for lua52.dll
+include lua52.inc
+includelib lua52dll.lib
 ENDIF
+
+include SDL2.inc
+includelib SDL2.lib
 
 ;------------------------------------------------------------------------------
 ; IEex.dll Prototypes
@@ -38,6 +44,8 @@ IEexDwordToAsciiHex     PROTO :DWORD,:DWORD,:DWORD       ; dwValue, lpszAsciiHex
 
 IEexRawToHexString      PROTO :DWORD,:DWORD,:DWORD,:DWORD; lpRaw, dwRawSize, lpszAsciiHexString, bUpperCase
 IEexHexStringToRaw      PROTO :DWORD,:DWORD              ; lpszAsciiHexString, lpRaw
+
+PUBLIC g_lua
 
 
 ;------------------------------------------------------------------------------

@@ -56,20 +56,20 @@ Menu=1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0
 [VerInf]
 Nme=VERINF1
 ID=1
-FV=1.0.0.2
-PV=1.0.0.2
+FV=1.0.0.3
+PV=1.0.0.3
 VerOS=0x00000004
 VerFT=0x00000001
 VerLNG=0x00000409
 VerCHS=0x000004B0
-ProductVersion=1.0.0.2
+ProductVersion=1.0.0.3
 ProductName=IEex.exe
 OriginalFilename=IEex.exe
 LegalTrademarks=fearless
 LegalCopyright=fearless
 InternalName=IEex.exe
 FileDescription=IEex loader
-FileVersion=1.0.0.2
+FileVersion=1.0.0.3
 CompanyName=fearless
 [Group]
 Group=Assembly,Resources,Misc
@@ -95,7 +95,7 @@ AutoLoad=2,4,5,1
 4=0,0,0,0,0
 5=0,0,0,0,6488
 2=0,0,0,0,1433
-1=0,0,0,0,919
+1=0,0,0,0,17329
 [RADebugBP]
 2=
 1=
@@ -134,7 +134,7 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=8708351
+PTimer=9611206
 [Collapse]
 2=
 1=512,,1024

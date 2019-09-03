@@ -17,6 +17,7 @@ IEEX_LOGLUACALLS        EQU 1 ; comment out to disable logging of the lua calls
 ; IEexLua Prototypes
 ;------------------------------------------------------------------------------
 IEexLuaInit             PROTO   :DWORD          ; lpszLuaFile
+IEexLuaBootstrap        PROTO                   ; 
 IEexLuaRegisterFunction PROTO   :DWORD, :DWORD  ; lpFuncAddress, lpszFuncName
 
 ;------------------------------------------------------------------------------
@@ -29,21 +30,7 @@ IEex_Call               PROTO C :VARARG         ; (lua_State)
 
 IEex_AddressList        PROTO C :DWORD          ; (lua_State)
 ;IEex_ReadDWORD          PROTO C :DWORD, :DWORD  ; (lua_State), dwAddress
-
-IFDEF IEEX_LUALIB       ; use this internal one rather than static version as it crashes
-lua_setglobalx          PROTO C :DWORD, :DWORD  ; (lua_State), Name
-ENDIF
-
-
-
-;------------------------------------------------------------------------------
-; IEexLua Structures
-;------------------------------------------------------------------------------
-ALENTRY                 STRUCT ; Address List entry for pAddressList array
-    lpszName            DD 0
-    dwAddress           DD 0
-ALENTRY                 ENDS
-
+l_log_print             PROTO C :VARARG         ; (lua_State)
 
 .CONST
 IFDEF IEEX_LOGLUACALLS
@@ -57,8 +44,6 @@ szIEex_ExposeToLua      DB "IEex_ExposeToLua",0
 szIEex_Call             DB "IEex_Call",0
 szIEex_AddressList      DB "IEex_AddressList",0
 ;szIEex_ReadDWORD        DB "IEex_ReadDWORD",0
-
-pAddressList            DD 0 ; points to array of ALENTRY entries x TotalPatterns 
 
 IFDEF IEEX_LOGLUACALLS
 IEex_WriteByte_Count    DD 0
@@ -79,10 +64,11 @@ IEexLuaInit PROC lpszLuaFile:DWORD
     PrintText 'IEexLuaInit'
     ENDIF
 
-    Invoke F_LuaL_newstate
-    mov g_lua, eax
+    Invoke IEexLuaBootstrap
 
-    Invoke F_LuaL_openlibs, g_lua
+    ;Invoke luaL_newstate
+    ;mov g_lua, eax
+    ;Invoke luaL_openlibs, g_lua
     
     IFDEF IEEX_LOGGING
     ;--------------------------------------------------------------------------
@@ -113,7 +99,7 @@ IEexLuaInit PROC lpszLuaFile:DWORD
         Invoke LogMessage, lpszLuaFile, LOG_STANDARD, 0
     .ENDIF    
     ENDIF
-    Invoke F_LuaL_loadfilex, g_lua, lpszLuaFile, CTEXT("t")
+    Invoke luaL_loadfilex, g_lua, lpszLuaFile, CTEXT("t")
     .IF eax != LUA_OK
         IFDEF IEEX_LOGGING
         .IF gIEexLog >= LOGLEVEL_DEBUG
@@ -147,7 +133,7 @@ IEexLuaInit PROC lpszLuaFile:DWORD
     .ENDIF    
     ENDIF
     
-    Invoke F_Lua_pcallk, g_lua, 0, LUA_MULTRET, 0, 0, 0
+    Invoke lua_pcallk, g_lua, 0, LUA_MULTRET, 0, 0, 0
     .IF eax != LUA_OK
         IFDEF IEEX_LOGGING
         .IF gIEexLog >= LOGLEVEL_DEBUG
@@ -177,12 +163,123 @@ IEexLuaInit ENDP
 
 IEEX_ALIGN
 ;------------------------------------------------------------------------------
+; IEexLuaBootstrap: Initialize Lua
+;------------------------------------------------------------------------------
+IEexLuaBootstrap PROC
+
+    Invoke luaL_newstate
+    mov g_lua, eax
+    
+    Invoke luaL_requiref, g_lua, CTEXT("_G"), Addr luaopen_base, 1
+    Invoke lua_settop, g_lua, -2
+    
+    Invoke lua_pushcclosure, g_lua, Addr l_log_print, 0
+    Invoke lua_setglobal, g_lua, CTEXT("print")
+    
+    Invoke luaL_requiref, g_lua, CTEXT("table"), Addr luaopen_table, 1
+    Invoke lua_settop, g_lua, -2
+    
+    Invoke luaL_requiref, g_lua, CTEXT("string"), Addr luaopen_string, 1
+    Invoke lua_settop, g_lua, -2
+    
+    Invoke luaL_requiref, g_lua, CTEXT("bit32"), Addr luaopen_bit32, 1
+    Invoke lua_settop, g_lua, -2
+    
+    Invoke luaL_requiref, g_lua, CTEXT("math"), Addr luaopen_math, 1
+    Invoke lua_settop, g_lua, -2
+    
+    Invoke luaL_requiref, g_lua, CTEXT("debug"), Addr luaopen_debug, 1
+    Invoke lua_settop, g_lua, -2
+    
+;    call luaL_newstate ; => 0x004B8D50 - outside range
+;    push 1h
+;    push _luaopen_base
+;    push ??_C@_02NIGGJGKC@_G?$AA@
+;    push eax
+;    mov dword ptr [_g_lua],eax
+;    call luaL_requiref ; => 0x004B88A0 - outside range
+
+;    push 0FFFFFFFEh
+;    push dword ptr [_g_lua]
+;    call lua_settop ; => 0x004B50C0 - outside range
+
+;    push 0h
+;    push l_log_print
+;    push dword ptr [_g_lua]
+;    call lua_pushcclosure ; => 0x004B5B30 - outside range
+
+;    push ??_C@_05IJDJACGD@print?$AA@
+;    push dword ptr [_g_lua]
+;    call lua_setglobal ; => 0x004B5E70 - outside range
+
+
+;    push 1h
+;    push _luaopen_table
+;    push ??_C@_05LCLENNFI@table?$AA@
+;    push dword ptr [_g_lua]
+;    call luaL_requiref ; => 0x004B88A0 - outside range
+
+;    push 0FFFFFFFEh
+;    push dword ptr [_g_lua]
+;    call lua_settop ; => 0x004B50C0 - outside range
+
+;    add esp,44h
+
+;    push 1h
+;    push _luaopen_string
+;    push ??_C@_06ICGJLFIM@string?$AA@
+;    push dword ptr [_g_lua]
+;    call luaL_requiref ; => 0x004B88A0 - outside range
+
+;    push 0FFFFFFFEh
+;    push dword ptr [_g_lua]
+;    call lua_settop ; => 0x004B50C0 - outside range
+
+;    push 1h
+;    push _luaopen_bit32
+;    push ??_C@_05LACDNNEC@bit32?$AA@
+;    push dword ptr [_g_lua]
+;    call luaL_requiref ; => 0x004B88A0 - outside range
+
+;    push 0FFFFFFFEh
+;    push dword ptr [_g_lua]
+;    call lua_settop ; => 0x004B50C0 - outside range
+
+;    push 1h
+;    push _luaopen_math
+;    push ??_C@_04CFDJAKFL@math?$AA@
+;    push dword ptr [_g_lua]
+;    call luaL_requiref ; => 0x004B88A0 - outside range
+
+;    add esp,40h
+;    push 0FFFFFFFEh
+;    push dword ptr [_g_lua]
+;    call lua_settop ; => 0x004B50C0 - outside range
+
+;    push 1h
+;    push _luaopen_debug
+;    push ??_C@_05GFCDIDHO@debug?$AA@
+;    push dword ptr [_g_lua]
+;    call luaL_requiref ; => 0x004B88A0 - outside range
+
+;    push 0FFFFFFFEh
+;    push dword ptr [_g_lua]
+;    call lua_settop ; => 0x004B50C0 - outside range
+
+;    ; Finish of selected range: 0x005167C4
+
+    ret
+IEexLuaBootstrap ENDP
+
+
+IEEX_ALIGN
+;------------------------------------------------------------------------------
 ; IEexLuaRegisterFunction: Registers LUA Functions in IE Game
 ; Devnote: This function is PROTO STDCALL
 ;------------------------------------------------------------------------------
 IEexLuaRegisterFunction PROC lpFunctionAddress:DWORD, lpszFunctionName:DWORD
-    Invoke F_Lua_pushcclosure, g_lua, lpFunctionAddress, 0
-    Invoke F_Lua_setglobal, g_lua, lpszFunctionName
+    Invoke lua_pushcclosure, g_lua, lpFunctionAddress, 0
+    Invoke lua_setglobal, g_lua, lpszFunctionName
     ret
 IEexLuaRegisterFunction ENDP
 
@@ -270,7 +367,7 @@ IEex_Init PROC C arg:VARARG
     sub esp, 4h
     fstp qword ptr [esp]
     push dword ptr [ebp+8h]
-    call F_Lua_pushnumber
+    call lua_pushnumber
     add esp,0Ch
     mov eax,1h
     pop ebp
@@ -311,14 +408,14 @@ IEex_WriteByte PROC C arg:VARARG
     push 0h
     push 1h
     push dword ptr [ebp+8h]
-    call F_Lua_tonumberx
+    call lua_tonumberx
     add esp, 0Ch
     call F__ftol2_sse
     mov edi, eax
     push 0h
     push 2h
     push dword ptr [ebp+8h]
-    call F_Lua_tonumberx
+    call lua_tonumberx
     add esp, 0Ch
     call F__ftol2_sse
     mov byte ptr [edi], al
@@ -356,22 +453,22 @@ IEex_ExposeToLua PROC C arg:VARARG
     push 0h
     push 1h
     push dword ptr [ebp+8h]
-    call F_Lua_tonumberx
+    call lua_tonumberx
     add esp, 0Ch
     call F__ftol2_sse
     push 0h
     push eax
     push dword ptr [g_lua]
-    call F_Lua_pushcclosure
+    call lua_pushcclosure
     add esp, 0Ch
     push 0h
     push 2h
     push dword ptr [ebp+8h]
-    call F_Lua_tolstring
+    call lua_tolstring
     add esp, 0Ch
     push eax
     push dword ptr [g_lua]
-    call F_Lua_setglobal
+    call lua_setglobal
     add esp, 8h
     mov eax, 0h
     pop ebp
@@ -394,7 +491,7 @@ IEex_Call PROC C arg:VARARG
     mov ebp, esp
 	push 2h
 	push dword ptr [ebp+8h]
-	call F_Lua_rawlen
+	call lua_rawlen
 	add esp, 8h
 	test eax, eax
 	je no_args
@@ -404,18 +501,18 @@ arg_loop:
 	push esi
 	push 2h
 	push dword ptr [ebp+8h]
-	call F_Lua_rawgeti
+	call lua_rawgeti
 	add esp, 0Ch
 	push 0h
 	push 0FFh
 	push dword ptr [ebp+8h]
-	call F_Lua_tonumberx
+	call lua_tonumberx
 	add esp, 0Ch
 	call F__ftol2_sse
 	push eax
 	push 0FEh
 	push dword ptr [ebp+8h]
-	call F_Lua_settop
+	call lua_settop
 	add esp, 8h
 	inc esi
 	cmp esi, edi
@@ -424,14 +521,14 @@ no_args:
 	push 0h
 	push 3h
 	push dword ptr [ebp+8h]
-	call F_Lua_tonumberx
+	call lua_tonumberx
 	add esp, 0Ch
 	call F__ftol2_sse
 	push eax
 	push 0h
 	push 1h
 	push dword ptr [ebp+8h]
-	call F_Lua_tonumberx
+	call lua_tonumberx
 	add esp, 0Ch
 	call F__ftol2_sse
 	pop ecx
@@ -441,12 +538,12 @@ no_args:
 	sub esp, 4h
 	fstp qword ptr [esp]
 	push dword ptr [ebp+8h]
-	call F_Lua_pushnumber
+	call lua_pushnumber
 	add esp, 0Ch
 	push 0h
 	push 4h
 	push dword ptr [ebp+8h]
-	call F_Lua_tonumberx
+	call lua_tonumberx
 	add esp, 0Ch
 	call F__ftol2_sse
 	add esp, eax
@@ -456,70 +553,6 @@ no_args:
 IEex_Call ENDP
 OPTION PROLOGUE:PrologueDef
 OPTION EPILOGUE:EpilogueDef
-
-
-;------------------------------------------------------------------------------
-; [LUA] lua_setglobalx: Alternative version of lua_setglobal
-;
-; lua_setglobalx(luastate, name)
-;------------------------------------------------------------------------------
-IFDEF IEEX_LUALIB
-IEEX_ALIGN
-OPTION PROLOGUE:NONE
-OPTION EPILOGUE:NONE
-lua_setglobalx PROC C USES EBX ESI lua_State:DWORD, lpname:DWORD
-    push ebp
-    mov ebp,esp
-    push ebx
-    push esi
-    mov esi, lua_State
-    mov edx,2h
-    push edi
-    mov eax,dword ptr [esi+0Ch]
-    mov ecx,dword ptr [eax+28h]
-    call luaH_getint
-    mov edi,dword ptr [esi+8h]
-    mov ebx,eax
-    mov edx, dword ptr [lpname]
-    lea ecx,dword ptr [edi+8h]
-    mov dword ptr [esi+8h],ecx
-    mov ecx,edx
-    lea eax,dword ptr [ecx+1h]
-    mov [lua_State], eax
-    nop 
-    
-LABEL_1:
-    mov al,byte ptr [ecx]
-    inc ecx
-    test al,al
-    jne LABEL_1
-    sub ecx, lua_State
-    push ecx
-    mov ecx,esi
-    call luaS_newlstr
-    mov dword ptr [edi],eax
-    mov edx,ebx
-    movzx eax,byte ptr [eax+4h]
-    or eax,7FF7A540h
-    mov dword ptr [edi+4h],eax
-    mov ecx,dword ptr [esi+8h]
-    lea eax,dword ptr [ecx-10h]
-    push eax
-    lea eax,dword ptr [ecx-8h]
-    mov ecx,esi
-    push eax
-    call luaV_settable
-    add esp,0Ch
-    add dword ptr [esi+8h],0FFFFFFF0h
-    pop edi
-    pop esi
-    pop ebx
-    pop ebp
-    ret     
-lua_setglobalx ENDP
-OPTION PROLOGUE:PrologueDef
-OPTION EPILOGUE:EpilogueDef
-ENDIF
 
 
 IEEX_ALIGN
@@ -539,37 +572,37 @@ IEex_AddressList PROC C USES EBX lua_State:DWORD
     ENDIF
     ENDIF
     
-    Invoke F_Lua_createtable, lua_State, 0, 34
+    Invoke lua_createtable, lua_State, 0, 34
 
-    Invoke F_Lua_pushstring, lua_State, Addr szGetProcAddress
+    Invoke lua_pushstring, lua_State, Addr szGetProcAddress
     fild F_GetProcAddress
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
     
-    Invoke F_Lua_pushstring, lua_State, Addr szLoadLibrary
+    Invoke lua_pushstring, lua_State, Addr szLoadLibrary
     fild F_LoadLibrary
     fstp qword ptr [qwAddress]     
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("__ftol2_sse")
+    Invoke lua_pushstring, lua_State, CTEXT("__ftol2_sse")
     fild F__ftol2_sse
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_malloc")
+    Invoke lua_pushstring, lua_State, CTEXT("_malloc")
     fild F_Malloc
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_free")
+    Invoke lua_pushstring, lua_State, CTEXT("_free")
     fild F_Free
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
     Invoke F_Lua_pushstring, lua_State, CTEXT("_luaL_newstate")
     fild F_LuaL_newstate
@@ -721,11 +754,11 @@ IEex_AddressList PROC C USES EBX lua_State:DWORD
     Invoke F_Lua_pushnumber, lua_State, qwAddress
     Invoke F_Lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_g_lua") 
+    Invoke lua_pushstring, lua_State, CTEXT("_g_lua") 
     fild g_lua
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
     mov eax, 1
     ret
@@ -753,12 +786,75 @@ IEex_ReadDWORD PROC C USES EBX lua_State:DWORD, dwAddress:DWORD
 ;    
 ;    fild dwAddressContent
 ;    fstp qword ptr [qwAddressContent]            
-;    Invoke F_Lua_pushnumber, lua_State, qwAddressContent
+;    Invoke lua_pushnumber, lua_State, qwAddressContent
 ;    mov eax, 1
 ;    ret
 IEex_ReadDWORD ENDP
 
-
+IEEX_ALIGN
+;------------------------------------------------------------------------------
+; [LUA] l_log_print
+;
+; 
+;------------------------------------------------------------------------------
+OPTION PROLOGUE:NONE
+OPTION EPILOGUE:NONE
+l_log_print PROC C arg:VARARG
+    push ebp
+    mov ebp,esp
+    push ebx
+    push esi
+    push edi
+    mov edi,dword ptr [ebp+8h]
+    push edi
+    call lua_gettop
+    mov ebx,eax
+    mov esi,1h
+    add esp,4h
+    cmp ebx,esi
+    jl LABEL_0x00516DCA
+    lea ecx,dword ptr [ecx]
+    
+LABEL_0x00516D90:
+    push esi
+    push edi
+    call lua_isstring
+    add esp,8h
+    test eax,eax
+    je LABEL_0x00516DAF
+    push 0h
+    push esi
+    push edi
+    call lua_tolstring
+    push eax
+    push CTEXT("LPRINT: %s")
+    jmp LABEL_0x00516DBD
+    
+LABEL_0x00516DAF:
+    push esi
+    push edi
+    call lua_typename
+    push eax
+    push esi
+    push CTEXT("Unable to convert arg %d a %s to string")
+    
+LABEL_0x00516DBD:
+    call SDL_Log
+    inc esi
+    add esp,14h
+    cmp esi,ebx
+    jle LABEL_0x00516D90
+    
+LABEL_0x00516DCA:
+    pop edi
+    pop esi
+    xor eax,eax
+    pop ebx
+    pop ebp
+    ret 
+l_log_print ENDP
+OPTION PROLOGUE:PrologueDef
+OPTION EPILOGUE:EpilogueDef
 
 
 
