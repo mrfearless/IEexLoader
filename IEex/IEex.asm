@@ -10,7 +10,7 @@
 .model flat,stdcall
 option casemap:none
 include \masm32\macros\macros.asm
-
+;
 ;DEBUG32 EQU 1
 ;IFDEF DEBUG32
 ;    PRESERVEXMMREGS equ 1
@@ -206,10 +206,11 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         mov bIEGameFound, TRUE
         lea eax, szBioware_BG
         mov lpszIEGame, eax
+    .ELSE
+        IFDEF DEBUG32
+        PrintText 'No BG'
+        ENDIF
     .ENDIF
-    IFDEF DEBUG32
-    PrintText 'No BG'
-    ENDIF
     
     ; BG2
     .IF bIEGameFound == FALSE
@@ -237,11 +238,12 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             mov bIEGameFound, TRUE
             lea eax, szBioware_BG2
             mov lpszIEGame, eax
+        .ELSE
+            IFDEF DEBUG32
+            PrintText 'No BG2'
+            ENDIF
         .ENDIF
     .ENDIF
-    IFDEF DEBUG32
-    PrintText 'No BG2'
-    ENDIF
 
     ; IWD
     .IF bIEGameFound == FALSE
@@ -269,11 +271,12 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             mov bIEGameFound, TRUE
             lea eax, szBlackIsle_IWD
             mov lpszIEGame, eax
+        .ELSE
+            IFDEF DEBUG32
+            PrintText 'No IWD'
+            ENDIF
         .ENDIF
     .ENDIF
-    IFDEF DEBUG32
-    PrintText 'No IWD'
-    ENDIF
     
     ; IWD2
     .IF bIEGameFound == FALSE
@@ -301,11 +304,12 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             mov bIEGameFound, TRUE
             lea eax, szBlackIsle_IWD2
             mov lpszIEGame, eax
+        .ELSE
+            IFDEF DEBUG32
+            PrintText 'No IWD2'
+            ENDIF
         .ENDIF
     .ENDIF
-    IFDEF DEBUG32
-    PrintText 'No IWD'
-    ENDIF
     
     ; PST
     .IF bIEGameFound == FALSE
@@ -333,12 +337,12 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             mov bIEGameFound, TRUE
             lea eax, szBlackIsle_PST
             mov lpszIEGame, eax
+        .ELSE
+            IFDEF DEBUG32
+            PrintText 'No PST'
+            ENDIF
         .ENDIF
     .ENDIF
-    IFDEF DEBUG32
-    PrintText 'No PST'
-    ENDIF
-    
     
     ;--------------------------------------------------------------------------
     ; Have we found any IE game exe? Display error message and exit if not
@@ -358,6 +362,10 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             Invoke DisplayErrorMessage, Addr szErrorIEGameEXE, 0
         .ENDIF
         ret 
+    .ELSE
+        IFDEF DEBUG32
+        PrintText 'Found IE game'
+        ENDIF
     .ENDIF
     
     
@@ -473,19 +481,19 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         mov SecuAttr.nLength, SIZEOF SECURITY_ATTRIBUTES
         mov SecuAttr.lpSecurityDescriptor, NULL
         mov SecuAttr.bInheritHandle, TRUE
+;        
+;        Invoke CreatePipe, Addr hChildStd_OUT_Rd, Addr hChildStd_OUT_Wr, Addr SecuAttr, 0 
+;        Invoke SetHandleInformation, hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0
+;        
+;        Invoke CreatePipe, Addr hChildStd_IN_Rd, Addr hChildStd_IN_Wr, Addr SecuAttr, 0
+;        Invoke SetHandleInformation, hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0
         
-        Invoke CreatePipe, Addr hChildStd_OUT_Rd, Addr hChildStd_OUT_Wr, Addr SecuAttr, 0 
-        Invoke SetHandleInformation, hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0
-        
-        Invoke CreatePipe, Addr hChildStd_IN_Rd, Addr hChildStd_IN_Wr, Addr SecuAttr, 0
-        Invoke SetHandleInformation, hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0
-        
-        mov eax, hChildStd_OUT_Wr
-        mov startinfo.hStdError, eax
-        mov startinfo.hStdOutput, eax
-        mov eax, hChildStd_IN_Rd
-        mov startinfo.hStdInput, NULL ;eax
-        mov startinfo.dwFlags, STARTF_USESTDHANDLES
+;        mov eax, hChildStd_OUT_Wr
+;        mov startinfo.hStdError, eax
+;        mov startinfo.hStdOutput, eax
+;        mov eax, hChildStd_IN_Rd
+;        mov startinfo.hStdInput, eax
+;        mov startinfo.dwFlags, STARTF_USESTDHANDLES
     .ELSE
         IFDEF DEBUG32
         PrintText 'GUI mode - no console redirection'
@@ -527,6 +535,10 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             Invoke LogMessage, Addr szStatusInjectingDLL
             Invoke LogMessage, Addr szCRLF
         .ENDIF
+
+        IFDEF DEBUG32
+        PrintText 'InjectDLL'
+        ENDIF
         Invoke InjectDLL, pi.hProcess, Addr szIEexDLL
         mov dwExitCode, eax
         Invoke ResumeThread, pi.hThread
@@ -539,15 +551,24 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             ;mov childconsolesize.y, 1
             ;Invoke SetConsoleScreenBufferSize, hChildStd_OUT_Rd, Addr childconsolesize
             
-            Invoke ConsoleText, Addr szStatusEntry
-            Invoke ConsoleText, Addr szStatusRedirectCon
-            Invoke ConsoleText, Addr szCRLF
-            Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szStatusEntry
-            Invoke LogMessage, Addr szStatusRedirectCon
-            Invoke LogMessage, Addr szCRLF
-            Invoke LogMessage, Addr szCRLF
-            Invoke ReadFromPipe
+;            Invoke ConsoleText, Addr szStatusEntry
+;            Invoke ConsoleText, Addr szStatusRedirectCon
+;            Invoke ConsoleText, Addr szCRLF
+;            Invoke ConsoleText, Addr szCRLF
+;            Invoke LogMessage, Addr szStatusEntry
+;            Invoke LogMessage, Addr szStatusRedirectCon
+;            Invoke LogMessage, Addr szCRLF
+;            Invoke LogMessage, Addr szCRLF
+;            
+;            IFDEF DEBUG32
+;            PrintText 'ReadFromPipe'
+;            ENDIF            
+;
+;            ;Invoke ReadFromPipe
+;            
+;            IFDEF DEBUG32
+;            PrintText 'Exit From ReadFromPipe'
+;            ENDIF                 
             Invoke ConsoleText, Addr szCRLF
             Invoke ConsoleSendEnterKey
             Invoke FreeConsole
@@ -560,8 +581,12 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             .ENDIF
         .ENDIF
 
-        Invoke CloseHandle, pi.hThread
-        Invoke CloseHandle, pi.hProcess
+;        IFDEF DEBUG32
+;        PrintText 'CloseHandle for thread and process'
+;        ENDIF  
+
+        ;Invoke CloseHandle, pi.hThread
+        ;Invoke CloseHandle, pi.hProcess
         .IF dwExitCode != TRUE
             ret
         .ENDIF
@@ -732,7 +757,11 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
         mov eax, FALSE
         ret
     .ENDIF
-
+    
+    IFDEF DEBUG32
+    PrintText 'InjectDLL::CreateRemoteThread'
+    ENDIF
+    
     Invoke CreateRemoteThread, hProcess, NULL, 0, lpStartRoutine, lpLibAddress, 0, Addr dwRemoteThreadID
     mov hRemoteThread, eax
     .IF eax == NULL
@@ -750,6 +779,10 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
         mov eax, FALSE
         ret
     .ENDIF
+    
+    IFDEF DEBUG32
+    PrintText 'InjectDLL::WaitForSingleObject'
+    ENDIF
     
     Invoke WaitForSingleObject, hRemoteThread, INFINITE
 

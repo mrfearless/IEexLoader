@@ -14,6 +14,7 @@ option casemap:none
 IEEX_ALIGN TEXTEQU <ALIGN 16>
 IEEX_LOGGING EQU 1 ; comment out if we dont require logging
 ;IEEX_LUALIB EQU 1 ; comment out to use lua function found in lua.dll. Otherwise use some lua functions from static lib
+IEEX_USESDL EQU 1 ; comment out to prevent use of Simple Direct Media (SDL2.dll)
 
 
 ;DEBUG32 EQU 1

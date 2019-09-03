@@ -44,7 +44,7 @@ IEEX_ALIGN              TEXTEQU <ALIGN 16>
 ;------------------------------------------------------------------------------
 AppName                 DB "IEex loader",0
 szAppName               DB "[IEex loader]",0
-szAppVersion            DB " v1.0.0.3",0
+szAppVersion            DB " v1.0.0.4",0
 szIEexLoaderByfearless  DB "IEex loader by fearless: github.com/mrfearless/IEexLoader",0
 szIEexByBubb            DB "IEex by Bubb: github.com/Bubb13/IEex",0
 szCRLF                  DB 13,10,0

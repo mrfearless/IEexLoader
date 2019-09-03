@@ -63,12 +63,14 @@ IEexLuaInit PROC lpszLuaFile:DWORD
     IFDEF DEBUG32
     PrintText 'IEexLuaInit'
     ENDIF
-
+    
+    IFDEF IEEX_USESDL
     Invoke IEexLuaBootstrap
-
-    ;Invoke luaL_newstate
-    ;mov g_lua, eax
-    ;Invoke luaL_openlibs, g_lua
+    ELSE
+    Invoke luaL_newstate
+    mov g_lua, eax
+    Invoke luaL_openlibs, g_lua
+    ENDIF
     
     IFDEF IEEX_LOGGING
     ;--------------------------------------------------------------------------
@@ -161,6 +163,7 @@ IEexLuaInit PROC lpszLuaFile:DWORD
 IEexLuaInit ENDP
 
 
+IFDEF IEEX_USESDL
 IEEX_ALIGN
 ;------------------------------------------------------------------------------
 ; IEexLuaBootstrap: Initialize Lua
@@ -190,86 +193,10 @@ IEexLuaBootstrap PROC
     
     Invoke luaL_requiref, g_lua, CTEXT("debug"), Addr luaopen_debug, 1
     Invoke lua_settop, g_lua, -2
-    
-;    call luaL_newstate ; => 0x004B8D50 - outside range
-;    push 1h
-;    push _luaopen_base
-;    push ??_C@_02NIGGJGKC@_G?$AA@
-;    push eax
-;    mov dword ptr [_g_lua],eax
-;    call luaL_requiref ; => 0x004B88A0 - outside range
-
-;    push 0FFFFFFFEh
-;    push dword ptr [_g_lua]
-;    call lua_settop ; => 0x004B50C0 - outside range
-
-;    push 0h
-;    push l_log_print
-;    push dword ptr [_g_lua]
-;    call lua_pushcclosure ; => 0x004B5B30 - outside range
-
-;    push ??_C@_05IJDJACGD@print?$AA@
-;    push dword ptr [_g_lua]
-;    call lua_setglobal ; => 0x004B5E70 - outside range
-
-
-;    push 1h
-;    push _luaopen_table
-;    push ??_C@_05LCLENNFI@table?$AA@
-;    push dword ptr [_g_lua]
-;    call luaL_requiref ; => 0x004B88A0 - outside range
-
-;    push 0FFFFFFFEh
-;    push dword ptr [_g_lua]
-;    call lua_settop ; => 0x004B50C0 - outside range
-
-;    add esp,44h
-
-;    push 1h
-;    push _luaopen_string
-;    push ??_C@_06ICGJLFIM@string?$AA@
-;    push dword ptr [_g_lua]
-;    call luaL_requiref ; => 0x004B88A0 - outside range
-
-;    push 0FFFFFFFEh
-;    push dword ptr [_g_lua]
-;    call lua_settop ; => 0x004B50C0 - outside range
-
-;    push 1h
-;    push _luaopen_bit32
-;    push ??_C@_05LACDNNEC@bit32?$AA@
-;    push dword ptr [_g_lua]
-;    call luaL_requiref ; => 0x004B88A0 - outside range
-
-;    push 0FFFFFFFEh
-;    push dword ptr [_g_lua]
-;    call lua_settop ; => 0x004B50C0 - outside range
-
-;    push 1h
-;    push _luaopen_math
-;    push ??_C@_04CFDJAKFL@math?$AA@
-;    push dword ptr [_g_lua]
-;    call luaL_requiref ; => 0x004B88A0 - outside range
-
-;    add esp,40h
-;    push 0FFFFFFFEh
-;    push dword ptr [_g_lua]
-;    call lua_settop ; => 0x004B50C0 - outside range
-
-;    push 1h
-;    push _luaopen_debug
-;    push ??_C@_05GFCDIDHO@debug?$AA@
-;    push dword ptr [_g_lua]
-;    call luaL_requiref ; => 0x004B88A0 - outside range
-
-;    push 0FFFFFFFEh
-;    push dword ptr [_g_lua]
-;    call lua_settop ; => 0x004B50C0 - outside range
-
-;    ; Finish of selected range: 0x005167C4
 
     ret
 IEexLuaBootstrap ENDP
+ENDIF
 
 
 IEEX_ALIGN
@@ -604,155 +531,155 @@ IEex_AddressList PROC C USES EBX lua_State:DWORD
     Invoke lua_pushnumber, lua_State, qwAddress
     Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_luaL_newstate")
+    Invoke lua_pushstring, lua_State, CTEXT("_luaL_newstate")
     fild F_LuaL_newstate
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_luaL_openlibs")
+    Invoke lua_pushstring, lua_State, CTEXT("_luaL_openlibs")
     fild F_LuaL_openlibs
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_luaL_loadfilex") 
+    Invoke lua_pushstring, lua_State, CTEXT("_luaL_loadfilex") 
     fild F_LuaL_loadfilex
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_createtable") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_createtable") 
     fild F_Lua_createtable
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_getglobal") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_getglobal") 
     fild F_Lua_getglobal
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_gettop") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_gettop") 
     fild F_Lua_gettop
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pcallk") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_pcallk") 
     fild F_Lua_pcallk
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pushcclosure") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_pushcclosure") 
     fild F_Lua_pushcclosure
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pushlightuserdata") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_pushlightuserdata") 
     fild F_Lua_pushlightuserdata
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pushlstring") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_pushlstring") 
     fild F_Lua_pushlstring
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pushnumber") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_pushnumber") 
     fild F_Lua_pushnumber
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_pushstring") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_pushstring") 
     fild F_Lua_pushstring
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_rawgeti") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_rawgeti") 
     fild F_Lua_rawgeti
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_rawlen") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_rawlen") 
     fild F_Lua_rawlen
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_setfield") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_setfield") 
     fild F_Lua_setfield
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_setglobal") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_setglobal") 
     fild F_Lua_setglobal
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_settable") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_settable") 
     fild F_Lua_settable
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_settop") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_settop") 
     fild F_Lua_settop
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_toboolean") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_toboolean") 
     fild F_Lua_toboolean
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_tolstring") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_tolstring") 
     fild F_Lua_tolstring
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_tonumberx") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_tonumberx") 
     fild F_Lua_tonumberx
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_touserdata") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_touserdata") 
     fild F_Lua_touserdata
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_type") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_type") 
     fild F_Lua_type
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_lua_typename") 
+    Invoke lua_pushstring, lua_State, CTEXT("_lua_typename") 
     fild F_Lua_typename
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
-    Invoke F_Lua_pushstring, lua_State, CTEXT("_luaL_loadstring") 
+    Invoke lua_pushstring, lua_State, CTEXT("_luaL_loadstring") 
     fild F_LuaL_loadstring
     fstp qword ptr [qwAddress]
-    Invoke F_Lua_pushnumber, lua_State, qwAddress
-    Invoke F_Lua_settable, lua_State, -3
+    Invoke lua_pushnumber, lua_State, qwAddress
+    Invoke lua_settable, lua_State, -3
 
     Invoke lua_pushstring, lua_State, CTEXT("_g_lua") 
     fild g_lua
@@ -791,6 +718,8 @@ IEex_ReadDWORD PROC C USES EBX lua_State:DWORD, dwAddress:DWORD
 ;    ret
 IEex_ReadDWORD ENDP
 
+
+IFDEF IEEX_USESDL
 IEEX_ALIGN
 ;------------------------------------------------------------------------------
 ; [LUA] l_log_print
@@ -855,6 +784,6 @@ LABEL_0x00516DCA:
 l_log_print ENDP
 OPTION PROLOGUE:PrologueDef
 OPTION EPILOGUE:EpilogueDef
-
+ENDIF
 
 

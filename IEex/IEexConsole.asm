@@ -242,11 +242,19 @@ ReadFromPipe PROC
     LOCAL hParentStdErr:DWORD
     LOCAL bSuccess:DWORD
 
+    IFDEF DEBUG32
+    PrintText 'ReadFromPipe'
+    ENDIF
+
     mov bSuccess, FALSE
     Invoke GetStdHandle, STD_OUTPUT_HANDLE
     mov hParentStdOut, eax
     Invoke GetStdHandle, STD_ERROR_HANDLE
     mov hParentStdErr, eax
+
+    IFDEF DEBUG32
+    PrintText 'ReadFromPipe Loop'
+    ENDIF
 
     .WHILE TRUE
         Invoke GetExitCodeProcess, pi.hProcess, Addr ExitCode
@@ -254,6 +262,9 @@ ReadFromPipe PROC
             ret
         .ENDIF
         
+        IFDEF DEBUG32
+        PrintText 'ReadFile'
+        ENDIF
         Invoke ReadFile, hChildStd_OUT_Rd, Addr PIPEBUFFER, SIZEOF PIPEBUFFER, Addr dwRead, NULL
         mov bSuccess, eax
         .IF bSuccess == FALSE || dwRead == 0
