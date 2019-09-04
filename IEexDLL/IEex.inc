@@ -23,14 +23,17 @@ includelib msvcrt12.lib
 ELSE ; for lua52.dll
 include lua52.inc
 includelib lua52dll.lib
-ECHO Using LUA Dynamic Link Linbary
+ECHO Using LUA Dynamic Link Library
 ENDIF
-IFDEF IEEX_USESDL
+IFDEF IEEX_SDLDLL
 include SDL2.inc
-includelib SDL2.lib
-ECHO Using SDL Dynamic Link Linbary
+includelib SDL2dll.lib
+ECHO Using SDL Dynamic Link Library
 ELSE
-ECHO No SDL
+include SDL2.inc
+includelib SDLlog.lib ;SDL2.lib
+;includelib msvcrt12.lib
+ECHO Using SDL Static Library
 ENDIF
 
 ;------------------------------------------------------------------------------

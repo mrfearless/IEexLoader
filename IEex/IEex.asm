@@ -31,7 +31,6 @@ CHECK_IEexDLL_EXISTS        EQU 1 ; uncomment to check if IEex.dll exists
 CHECK_IEexLUA_EXISTS        EQU 1 ; uncomment to check if M___IEex.lua exists
 ;CHECK_OVERRIDE_FILES        EQU 1 ; uncomment to check if override files exists
 
-
 .CODE
 
 ;------------------------------------------------------------------------------
@@ -44,57 +43,10 @@ start:
     Invoke GetCommandLine
     mov CommandLine, eax
     
-    Invoke ProcessCmdLine
-    
     Invoke WinMain, hInstance, NULL, CommandLine, SW_SHOWDEFAULT
     Invoke ExitProcess, eax
     ret
 
-IEEX_ALIGN
-;------------------------------------------------------------------------------
-; ProcessCmdLine - process the command line
-;------------------------------------------------------------------------------
-ProcessCmdLine PROC
-    LOCAL dwTotalParameters:DWORD
-    LOCAL dwLenParam1:DWORD
-    
-    Invoke ConsoleParseCmdLine, Addr CmdLineParameters
-    mov dwTotalParameters, eax
-
-    .IF eax == 1 ; only IEex.exe is specified on command line
-        ret
-        
-    .ELSEIF eax == 2 ; IEex.exe and some other parameter 
-        Invoke ConsoleCmdLineParam, Addr CmdLineParameters, 1, dwTotalParameters, Addr szParameter1Buffer
-        
-        Invoke GetCurrentDirectory, MAX_PATH, Addr szLogFile
-        Invoke lstrcat, Addr szLogFile, Addr szBackslash
-        Invoke lstrcat, Addr szLogFile, Addr szParameter1Buffer
-        
-        IFDEF DEBUG32
-        PrintString szLogFile
-        ENDIF
-        
-        Invoke CreateFile, Addr szLogFile, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_WRITE or FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL
-        .IF eax == INVALID_HANDLE_VALUE
-            IFDEF DEBUG32
-            Invoke GetLastError
-            PrintDec eax
-            ENDIF
-            ret
-        .ENDIF
-
-    .ENDIF
-    
-    mov hLogFile, eax
-    
-    IFDEF DEBUG32
-    PrintDec hLogFile
-    ENDIF
-    
-    xor eax, eax
-    ret
-ProcessCmdLine ENDP
 
 IEEX_ALIGN
 ;------------------------------------------------------------------------------
@@ -140,17 +92,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         Invoke ConsoleText, Addr szIEexByBubb
         Invoke ConsoleText, Addr szCRLF
         Invoke ConsoleText, Addr szCRLF
-        Invoke LogMessage, Addr szAppName
-        Invoke LogMessage, Addr szAppVersion
-        Invoke LogMessage, Addr szCRLF
-        Invoke LogMessage, Addr szCRLF
-        Invoke LogMessage, Addr szInfoEntry
-        Invoke LogMessage, Addr szIEexLoaderByfearless
-        Invoke LogMessage, Addr szCRLF
-        Invoke LogMessage, Addr szInfoEntry
-        Invoke LogMessage, Addr szIEexByBubb        
-        Invoke LogMessage, Addr szCRLF
-        Invoke LogMessage, Addr szCRLF
     .ENDIF
     
 
@@ -164,9 +105,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorIEGameRunning
             Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szErrorEntry
-            Invoke LogMessage, Addr szErrorIEGameRunning
-            Invoke LogMessage, Addr szCRLF
         .ELSE
             Invoke DisplayErrorMessage, Addr szErrorIEGameRunning, 0
         .ENDIF
@@ -194,9 +132,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
 ;                Invoke ConsoleText, Addr szErrorEntry
 ;                Invoke ConsoleText, Addr szErrorBioware_BG
 ;                Invoke ConsoleText, Addr szCRLF
-;                Invoke LogMessage, Addr szErrorEntry
-;                Invoke LogMessage, Addr szErrorBioware_BG
-;                Invoke LogMessage, Addr szCRLF
 ;            .ELSE
 ;                Invoke DisplayErrorMessage, Addr szErrorBioware_BG, 0
 ;            .ENDIF
@@ -226,9 +161,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
                     Invoke ConsoleText, Addr szErrorEntry
                     Invoke ConsoleText, Addr szErrorBioware_BG2
                     Invoke ConsoleText, Addr szCRLF
-                    Invoke LogMessage, Addr szErrorEntry
-                    Invoke LogMessage, Addr szErrorBioware_BG2
-                    Invoke LogMessage, Addr szCRLF
                 .ELSE
                     Invoke DisplayErrorMessage, Addr szErrorBioware_BG2, 0
                 .ENDIF
@@ -259,9 +191,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
                     Invoke ConsoleText, Addr szErrorEntry
                     Invoke ConsoleText, Addr szErrorBlackIsle_IWD
                     Invoke ConsoleText, Addr szCRLF
-                    Invoke LogMessage, Addr szErrorEntry
-                    Invoke LogMessage, Addr szErrorBlackIsle_IWD
-                    Invoke LogMessage, Addr szCRLF
                 .ELSE
                     Invoke DisplayErrorMessage, Addr szErrorBlackIsle_IWD, 0
                 .ENDIF
@@ -292,9 +221,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
                     Invoke ConsoleText, Addr szErrorEntry
                     Invoke ConsoleText, Addr szErrorBlackIsle_IWD2
                     Invoke ConsoleText, Addr szCRLF
-                    Invoke LogMessage, Addr szErrorEntry
-                    Invoke LogMessage, Addr szErrorBlackIsle_IWD2
-                    Invoke LogMessage, Addr szCRLF
                 .ELSE
                     Invoke DisplayErrorMessage, Addr szErrorBlackIsle_IWD, 0
                 .ENDIF
@@ -325,9 +251,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
                     Invoke ConsoleText, Addr szErrorEntry
                     Invoke ConsoleText, Addr szErrorBlackIsle_PST
                     Invoke ConsoleText, Addr szCRLF
-                    Invoke LogMessage, Addr szErrorEntry
-                    Invoke LogMessage, Addr szErrorBlackIsle_PST
-                    Invoke LogMessage, Addr szCRLF
                 .ELSE
                     Invoke DisplayErrorMessage, Addr szErrorBlackIsle_PST, 0
                 .ENDIF
@@ -355,9 +278,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorIEGameEXE
             Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szErrorEntry
-            Invoke LogMessage, Addr szErrorIEGameEXE
-            Invoke LogMessage, Addr szCRLF
         .ELSE
             Invoke DisplayErrorMessage, Addr szErrorIEGameEXE, 0
         .ENDIF
@@ -387,9 +307,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorIEexDLLFind
             Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szErrorEntry
-            Invoke LogMessage, Addr szErrorIEexDLLFind
-            Invoke LogMessage, Addr szCRLF
         .ELSE
             Invoke DisplayErrorMessage, Addr szErrorIEexDLLFind, 0
         .ENDIF
@@ -422,9 +339,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
                 Invoke ConsoleText, Addr szErrorEntry
                 Invoke ConsoleText, Addr szErrorM__IEexMissing
                 Invoke ConsoleText, Addr szCRLF
-                Invoke LogMessage, Addr szErrorEntry
-                Invoke LogMessage, Addr szErrorM__IEexMissing
-                Invoke LogMessage, Addr szCRLF
             .ELSE
                 Invoke DisplayErrorMessage, Addr szErrorM__IEexMissing, 0
             .ENDIF
@@ -456,9 +370,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
                 Invoke ConsoleText, Addr szErrorEntry
                 Invoke ConsoleText, Addr szErrorIEexDBMissing
                 Invoke ConsoleText, Addr szCRLF
-                Invoke LogMessage, Addr szErrorEntry
-                Invoke LogMessage, Addr szErrorIEexDBMissing
-                Invoke LogMessage, Addr szCRLF
             .ELSE
                 Invoke DisplayErrorMessage, Addr szErrorIEexDBMissing, 0
             .ENDIF
@@ -511,10 +422,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         Invoke ConsoleText, Addr szStatusLaunchingIEGame
         Invoke ConsoleText, lpszIEGame
         Invoke ConsoleText, Addr szCRLF
-        Invoke LogMessage, Addr szStatusEntry
-        Invoke LogMessage, Addr szStatusLaunchingIEGame
-        Invoke LogMessage, lpszIEGame
-        Invoke LogMessage, Addr szCRLF
     .ENDIF
     Invoke CreateProcess, lpszIEGame, NULL, NULL, NULL, TRUE, CREATE_SUSPENDED, NULL, NULL, Addr startinfo, Addr pi
     .IF eax != 0 ; CreateProcess success
@@ -531,9 +438,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             Invoke ConsoleText, Addr szStatusEntry
             Invoke ConsoleText, Addr szStatusInjectingDLL
             Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szStatusEntry
-            Invoke LogMessage, Addr szStatusInjectingDLL
-            Invoke LogMessage, Addr szCRLF
         .ENDIF
 
         IFDEF DEBUG32
@@ -555,10 +459,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
 ;            Invoke ConsoleText, Addr szStatusRedirectCon
 ;            Invoke ConsoleText, Addr szCRLF
 ;            Invoke ConsoleText, Addr szCRLF
-;            Invoke LogMessage, Addr szStatusEntry
-;            Invoke LogMessage, Addr szStatusRedirectCon
-;            Invoke LogMessage, Addr szCRLF
-;            Invoke LogMessage, Addr szCRLF
 ;            
 ;            IFDEF DEBUG32
 ;            PrintText 'ReadFromPipe'
@@ -595,9 +495,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorIEGameExecute
             Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szErrorEntry
-            Invoke LogMessage, Addr szErrorIEGameExecute
-            Invoke LogMessage, Addr szCRLF
         .ELSE    
             Invoke GetLastError
             Invoke DisplayErrorMessage, Addr szErrorIEGameExecute, eax
@@ -692,9 +589,6 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorVirtualAllocEx
             Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szErrorEntry
-            Invoke LogMessage, Addr szErrorVirtualAllocEx
-            Invoke LogMessage, Addr szCRLF
         .ELSE
             Invoke GetLastError
             Invoke DisplayErrorMessage, Addr szErrorVirtualAllocEx, eax
@@ -709,9 +603,6 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorWriteProcessMem
             Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szErrorEntry
-            Invoke LogMessage, Addr szErrorWriteProcessMem
-            Invoke LogMessage, Addr szCRLF
         .ELSE
             Invoke GetLastError
             Invoke DisplayErrorMessage, Addr szErrorWriteProcessMem, eax
@@ -729,9 +620,6 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorGetModuleHandle
             Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szErrorEntry
-            Invoke LogMessage, Addr szErrorGetModuleHandle
-            Invoke LogMessage, Addr szCRLF
         .ELSE
             Invoke GetLastError
             Invoke DisplayErrorMessage, Addr szErrorGetModuleHandle, eax
@@ -747,9 +635,6 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorGetProcAddress
             Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szErrorEntry
-            Invoke LogMessage, Addr szErrorGetProcAddress
-            Invoke LogMessage, Addr szCRLF
         .ELSE
             Invoke GetLastError
             Invoke DisplayErrorMessage, Addr szErrorGetProcAddress, eax
@@ -769,9 +654,6 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorRemoteThread
             Invoke ConsoleText, Addr szCRLF
-            Invoke LogMessage, Addr szErrorEntry
-            Invoke LogMessage, Addr szErrorRemoteThread
-            Invoke LogMessage, Addr szCRLF
         .ELSE
             Invoke GetLastError
             Invoke DisplayErrorMessage, Addr szErrorRemoteThread, eax
@@ -932,24 +814,6 @@ CheckFileVersion PROC USES EBX szVersionFile:DWORD, szVersion:DWORD
 CheckFileVersion endp
 ENDIF
 
-IEEX_ALIGN
-;------------------------------------------------------------------------------
-; LogMessage
-;------------------------------------------------------------------------------
-LogMessage PROC lpszLogText:DWORD
-    LOCAL dwBytesToWrite:DWORD
-    LOCAL dwBytesWritten:DWORD
-    
-    .IF hLogFile != 0 && lpszLogText != 0
-        Invoke lstrlen, lpszLogText
-        mov dwBytesToWrite, eax
-        Invoke WriteFile, hLogFile, lpszLogText, dwBytesToWrite, Addr dwBytesWritten, NULL
-        mov eax, dwBytesWritten
-    .ELSE
-        xor eax, eax
-    .ENDIF
-    ret
-LogMessage ENDP
 
 
 

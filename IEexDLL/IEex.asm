@@ -14,7 +14,7 @@ option casemap:none
 IEEX_ALIGN TEXTEQU <ALIGN 16>
 IEEX_LOGGING EQU 1 ; comment out if we dont require logging
 ;IEEX_LUALIB EQU 1 ; comment out to use lua function found in lua.dll. Otherwise use some lua functions from static lib
-IEEX_USESDL EQU 1 ; comment out to prevent use of Simple Direct Media (SDL2.dll)
+;IEEX_SDLDLL EQU 1 ; comment out to use Static library of SDL or leave uncommented to use Dynamic link library of SDL (SDL2.dll)
 
 
 ;DEBUG32 EQU 1
@@ -143,7 +143,7 @@ IEexInitDll PROC USES EBX
                 ;--------------------------------------------------------------
 
                 ;--------------------------------------------------------------
-                ; Continue Onwards To Verify / Search Stage
+                ; Continue Onwards
                 ;--------------------------------------------------------------
             .ELSE ; IMAGE_NT_SIGNATURE Failed
                 IFDEF IEEX_LOGGING
@@ -153,6 +153,7 @@ IEexInitDll PROC USES EBX
                     Invoke LogClose
                 .ENDIF
                 ENDIF
+                Invoke TerminateProcess, hIEGameProcess, NULL
                 ret ; Exit EEexInitDll
             .ENDIF
         .ELSE ; IMAGE_DOS_SIGNATURE Failed
@@ -163,6 +164,7 @@ IEexInitDll PROC USES EBX
                 Invoke LogClose
             .ENDIF
             ENDIF
+            Invoke TerminateProcess, hIEGameProcess, NULL
             ret ; Exit IEexInitDll
         .ENDIF
     .ELSE ; GetModuleInformation Failed
@@ -173,6 +175,7 @@ IEexInitDll PROC USES EBX
             Invoke LogClose
         .ENDIF
         ENDIF
+        Invoke TerminateProcess, hIEGameProcess, NULL
         ret ; Exit IEexInitDll
     .ENDIF
     ;--------------------------------------------------------------------------

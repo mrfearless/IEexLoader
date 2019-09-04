@@ -57,20 +57,20 @@ Menu=1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0
 [VerInf]
 Nme=VERINF1
 ID=1
-FV=1.0.0.4
-PV=1.0.0.4
+FV=1.0.0.5
+PV=1.0.0.5
 VerOS=0x00000004
 VerFT=0x00000001
 VerLNG=0x00000409
 VerCHS=0x000004B0
-ProductVersion=1.0.0.4
+ProductVersion=1.0.0.5
 ProductName=IEex.exe
 OriginalFilename=IEex.exe
 LegalTrademarks=fearless
 LegalCopyright=fearless
 InternalName=IEex.exe
 FileDescription=IEex loader
-FileVersion=1.0.0.4
+FileVersion=1.0.0.5
 CompanyName=fearless
 [Group]
 Group=Assembly,Resources,Misc
@@ -96,7 +96,7 @@ AutoLoad=2,4,5,1
 4=0,0,0,0,0
 5=0,0,0,0,7586
 2=0,0,0,0,1433
-1=0,0,0,0,435
+1=0,0,0,0,25136
 [RADebugBP]
 2=
 1=
@@ -111,7 +111,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=3
+MilestoneOnDateDate=4
 MilestoneOnDateTimeYear=2019
 MilestoneOnDateTimeMonth=9
 MilestoneOnDateTimeDate=1
@@ -135,10 +135,10 @@ ProductVer2Range=0
 ProductVer3Range=0
 ProductVer4Range=0
 [PTimer]
-PTimer=13712361
+PTimer=14888967
 [Collapse]
 2=
-1=1107296768,,1024
+1=276824064,,
 5=
 4=
 [GroupExpand]

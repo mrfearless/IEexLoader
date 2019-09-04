@@ -64,13 +64,10 @@ IEexLuaInit PROC lpszLuaFile:DWORD
     PrintText 'IEexLuaInit'
     ENDIF
     
-    IFDEF IEEX_USESDL
     Invoke IEexLuaBootstrap
-    ELSE
-    Invoke luaL_newstate
-    mov g_lua, eax
-    Invoke luaL_openlibs, g_lua
-    ENDIF
+    ;Invoke luaL_newstate
+    ;mov g_lua, eax
+    ;Invoke luaL_openlibs, g_lua
     
     IFDEF IEEX_LOGGING
     ;--------------------------------------------------------------------------
@@ -163,7 +160,6 @@ IEexLuaInit PROC lpszLuaFile:DWORD
 IEexLuaInit ENDP
 
 
-IFDEF IEEX_USESDL
 IEEX_ALIGN
 ;------------------------------------------------------------------------------
 ; IEexLuaBootstrap: Initialize Lua
@@ -193,10 +189,18 @@ IEexLuaBootstrap PROC
     
     Invoke luaL_requiref, g_lua, CTEXT("debug"), Addr luaopen_debug, 1
     Invoke lua_settop, g_lua, -2
+    
+    Invoke luaL_requiref, g_lua, CTEXT("io"), Addr luaopen_io, 1
+    Invoke lua_settop, g_lua, -2
+    
+    Invoke luaL_requiref, g_lua, CTEXT("os"), Addr luaopen_os, 1
+    Invoke lua_settop, g_lua, -2
+    
+    Invoke luaL_requiref, g_lua, CTEXT("package"), Addr luaopen_package, 1
+    Invoke lua_settop, g_lua, -2
 
     ret
 IEexLuaBootstrap ENDP
-ENDIF
 
 
 IEEX_ALIGN
@@ -719,7 +723,6 @@ IEex_ReadDWORD PROC C USES EBX lua_State:DWORD, dwAddress:DWORD
 IEex_ReadDWORD ENDP
 
 
-IFDEF IEEX_USESDL
 IEEX_ALIGN
 ;------------------------------------------------------------------------------
 ; [LUA] l_log_print
@@ -784,6 +787,6 @@ LABEL_0x00516DCA:
 l_log_print ENDP
 OPTION PROLOGUE:PrologueDef
 OPTION EPILOGUE:EpilogueDef
-ENDIF
+
 
 
