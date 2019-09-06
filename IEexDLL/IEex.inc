@@ -17,23 +17,28 @@ includelib psapi.lib
 includelib version.lib
 
 IFDEF IEEX_LUALIB
-include lua52.inc
-includelib lua523.lib ; nil value for lua_setglobal
-includelib msvcrt12.lib
-ELSE ; for lua52.dll
-include lua52.inc
-includelib lua52dll.lib
-ECHO Using LUA Dynamic Link Library
+    include lua52.inc
+    includelib lua523.lib
+    includelib msvcrt12.lib
+    ECHO Using LUA Static Library
+ELSE
+    include lua52.inc
+    includelib lua52dll.lib
+    ECHO Using LUA Dynamic Link Library
 ENDIF
 IFDEF IEEX_SDLDLL
-include SDL2.inc
-includelib SDL2dll.lib
-ECHO Using SDL Dynamic Link Library
+    include SDL2.inc
+    includelib SDL2dll.lib
+    ECHO Using SDL Dynamic Link Library
 ELSE
-include SDL2.inc
-includelib SDLlog.lib ;SDL2.lib
-;includelib msvcrt12.lib
-ECHO Using SDL Static Library
+    IFDEF IEEX_SDLINT
+       ECHO Using SDL Internal Functions
+    ELSE
+        include SDL2.inc
+        includelib SDLlog.lib ;SDL2.lib
+        includelib msvcrt12.lib
+        ECHO Using SDL Static Library
+    ENDIF
 ENDIF
 
 ;------------------------------------------------------------------------------

@@ -5,9 +5,11 @@
 ;
 ;------------------------------------------------------------------------------
 
-IEEX_LOGLUACALLS        EQU 1 ; comment out to disable logging of the lua calls
+;IEEX_LOGLUACALLS        EQU 1 ; comment out to disable logging of the lua calls
                               ; requires gIEexLog >= LOGLEVEL_DEBUG if using
-                              
+;IEEX_LOGIEEXREGISTER    EQU 1 ; comment out to disable logging of IEex function
+                              ; registeration
+
 ;------------------------------------------------------------------------------
 ; Devnote: Static lua lib functions that dont work/crash:
 ; luaL_loadstring, lua_setglobal
@@ -30,12 +32,13 @@ IEex_Call               PROTO C :VARARG         ; (lua_State)
 
 IEex_AddressList        PROTO C :DWORD          ; (lua_State)
 ;IEex_ReadDWORD          PROTO C :DWORD, :DWORD  ; (lua_State), dwAddress
-l_log_print             PROTO C :VARARG         ; (lua_State)
+
 
 .CONST
 IFDEF IEEX_LOGLUACALLS
 IEEX_WRITEBYTE_LOGCOUNT EQU 2048                ; logs IEex_WriteByte every x calls
 ENDIF
+
 
 .DATA
 szIEex_Init             DB "IEex_Init",0        
@@ -87,8 +90,10 @@ IEexLuaInit PROC lpszLuaFile:DWORD
     Invoke IEexLuaRegisterFunction, Addr IEex_Init, Addr szIEex_Init
     IFDEF IEEX_LOGGING
     .IF gIEexLog >= LOGLEVEL_DEBUG
+        IFDEF IEEX_LOGIEEXREGISTER
         Invoke LogMessage, CTEXT("Register Function -  IEex_Init"), LOG_NONEWLINE, 1
         Invoke LogMessageAndHexValue, 0, Addr IEex_Init
+        ENDIF
     .ENDIF    
     ENDIF
     
@@ -129,6 +134,7 @@ IEexLuaInit PROC lpszLuaFile:DWORD
     IFDEF IEEX_LOGGING
     .IF gIEexLog >= LOGLEVEL_DEBUG
         Invoke LogMessage, CTEXT("Executing IEex lua file"), LOG_STANDARD, 1
+        Invoke LogMessage, 0, LOG_CRLF, 0
     .ENDIF    
     ENDIF
     
@@ -232,37 +238,49 @@ IEex_Init PROC C arg:VARARG
     ENDIF
     IFDEF IEEX_LOGGING
     .IF gIEexLog >= LOGLEVEL_DEBUG
+        IFDEF IEEX_LOGIEEXREGISTER
         Invoke LogMessage, 0, LOG_CRLF, 0
         Invoke LogMessage, CTEXT("IEex_Init:"), LOG_INFO, 0
+        ENDIF
     .ENDIF
     ENDIF
     
     Invoke IEexLuaRegisterFunction, Addr IEex_WriteByte, Addr szIEex_WriteByte
     IFDEF IEEX_LOGGING
     .IF gIEexLog >= LOGLEVEL_DEBUG
+        IFDEF IEEX_LOGIEEXREGISTER
         Invoke LogMessage, CTEXT("Register Function -  IEex_WriteByte"), LOG_NONEWLINE, 1
         Invoke LogMessageAndHexValue, 0, Addr IEex_WriteByte
+        ENDIF
     .ENDIF
     ENDIF
     Invoke IEexLuaRegisterFunction, Addr IEex_ExposeToLua, Addr szIEex_ExposeToLua
     IFDEF IEEX_LOGGING
     .IF gIEexLog >= LOGLEVEL_DEBUG
+        IFDEF IEEX_LOGIEEXREGISTER
         Invoke LogMessage, CTEXT("Register Function -  IEex_ExposeToLua"), LOG_NONEWLINE, 1
         Invoke LogMessageAndHexValue, 0, Addr IEex_ExposeToLua
+        ENDIF
     .ENDIF
     ENDIF
     
     Invoke IEexLuaRegisterFunction, Addr IEex_Call, Addr szIEex_Call
     IFDEF IEEX_LOGGING
-    Invoke LogMessage, CTEXT("Register Function -  IEex_Call"), LOG_NONEWLINE, 1
-    Invoke LogMessageAndHexValue, 0, Addr IEex_Call
+    .IF gIEexLog >= LOGLEVEL_DEBUG
+        IFDEF IEEX_LOGIEEXREGISTER
+        Invoke LogMessage, CTEXT("Register Function -  IEex_Call"), LOG_NONEWLINE, 1
+        Invoke LogMessageAndHexValue, 0, Addr IEex_Call
+        ENDIF
+    .ENDIF
     ENDIF
 
     Invoke IEexLuaRegisterFunction, Addr IEex_AddressList, Addr szIEex_AddressList
     IFDEF IEEX_LOGGING
     .IF gIEexLog >= LOGLEVEL_DEBUG
+        IFDEF IEEX_LOGIEEXREGISTER
         Invoke LogMessage, CTEXT("Register Function -  IEex_AddressList"), LOG_NONEWLINE, 1
         Invoke LogMessageAndHexValue, 0, Addr IEex_AddressList
+        ENDIF
     .ENDIF
     ENDIF
 
@@ -277,9 +295,11 @@ IEex_Init PROC C arg:VARARG
 
     IFDEF IEEX_LOGGING
     .IF gIEexLog >= LOGLEVEL_DEBUG
+        IFDEF IEEX_LOGIEEXREGISTER
         Invoke LogMessage, 0, LOG_CRLF, 0
         Invoke LogMessage, CTEXT("VirtualAlloc 4096 bytes"), LOG_INFO, 0
         Invoke LogMessage, 0, LOG_CRLF, 0
+        ENDIF
     .ENDIF
     IFDEF IEEX_LOGLUACALLS
     .IF gIEexLog >= LOGLEVEL_DEBUG
@@ -723,70 +743,6 @@ IEex_ReadDWORD PROC C USES EBX lua_State:DWORD, dwAddress:DWORD
 IEex_ReadDWORD ENDP
 
 
-IEEX_ALIGN
-;------------------------------------------------------------------------------
-; [LUA] l_log_print
-;
-; 
-;------------------------------------------------------------------------------
-OPTION PROLOGUE:NONE
-OPTION EPILOGUE:NONE
-l_log_print PROC C arg:VARARG
-    push ebp
-    mov ebp,esp
-    push ebx
-    push esi
-    push edi
-    mov edi,dword ptr [ebp+8h]
-    push edi
-    call lua_gettop
-    mov ebx,eax
-    mov esi,1h
-    add esp,4h
-    cmp ebx,esi
-    jl LABEL_0x00516DCA
-    lea ecx,dword ptr [ecx]
-    
-LABEL_0x00516D90:
-    push esi
-    push edi
-    call lua_isstring
-    add esp,8h
-    test eax,eax
-    je LABEL_0x00516DAF
-    push 0h
-    push esi
-    push edi
-    call lua_tolstring
-    push eax
-    push CTEXT("LPRINT: %s")
-    jmp LABEL_0x00516DBD
-    
-LABEL_0x00516DAF:
-    push esi
-    push edi
-    call lua_typename
-    push eax
-    push esi
-    push CTEXT("Unable to convert arg %d a %s to string")
-    
-LABEL_0x00516DBD:
-    call SDL_Log
-    inc esi
-    add esp,14h
-    cmp esi,ebx
-    jle LABEL_0x00516D90
-    
-LABEL_0x00516DCA:
-    pop edi
-    pop esi
-    xor eax,eax
-    pop ebx
-    pop ebp
-    ret 
-l_log_print ENDP
-OPTION PROLOGUE:PrologueDef
-OPTION EPILOGUE:EpilogueDef
 
 
 

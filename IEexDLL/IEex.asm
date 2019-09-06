@@ -15,7 +15,7 @@ IEEX_ALIGN TEXTEQU <ALIGN 16>
 IEEX_LOGGING EQU 1 ; comment out if we dont require logging
 ;IEEX_LUALIB EQU 1 ; comment out to use lua function found in lua.dll. Otherwise use some lua functions from static lib
 ;IEEX_SDLDLL EQU 1 ; comment out to use Static library of SDL or leave uncommented to use Dynamic link library of SDL (SDL2.dll)
-
+IEEX_SDLINT EQU 1 ; use internal SDL log equiv instead of static lib
 
 ;DEBUG32 EQU 1
 ;IFDEF DEBUG32
@@ -38,6 +38,7 @@ ENDM
 include IEex.inc        ; Basic include file. Error messages, strings for function names, buffers etc
 include IEexIni.asm     ; Ini functions, strings for sections and key names
 include IEexLog.asm     ; Log functions, strings for logging output
+include IEexPrint.asm   ; SDL log adaption for EE game's l_log_print lua "Print" function
 include IEexLua.asm     ; IEexLuaInit, IEex_Init and other Lua functions used by IEex
 
 
