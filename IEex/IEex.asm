@@ -43,7 +43,10 @@ start:
     Invoke GetCommandLine
     mov CommandLine, eax
     
+    Invoke ConsoleInit    
     Invoke WinMain, hInstance, NULL, CommandLine, SW_SHOWDEFAULT
+    Invoke ConsoleExit
+    
     Invoke ExitProcess, eax
     ret
 
@@ -73,11 +76,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
     ; Check if we can attach a console or not, which helps determine if
     ; we started via explorer or via a command line (cmd)
     ;--------------------------------------------------------------------------
-    Invoke ConsoleAttach
-    Invoke ConsoleStarted
-    mov StartedMode, eax
-    
-    .IF StartedMode == TRUE
+    .IF gConsoleStartedMode == TRUE
         Invoke GetStdHandle, STD_OUTPUT_HANDLE
         mov hConOutput, eax
         Invoke ConsoleClearScreen
@@ -101,7 +100,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
     mov dwIEGameRunning, FALSE
     Invoke EnumWindows, Addr EnumWindowsProc, Addr dwIEGameRunning
     .IF dwIEGameRunning == TRUE
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorIEGameRunning
             Invoke ConsoleText, Addr szCRLF
@@ -128,7 +127,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
 ;        IFDEF CHECK_EXE_FILEVERSION
 ;        Invoke CheckFileVersion, Addr szBioware_BG, Addr szBioware_BGExeVersion ; "2, 5, 0, 0" - dont have this exe to check file version
 ;        .IF eax == FALSE
-;            .IF StartedMode == TRUE
+;            .IF gConsoleStartedMode == TRUE
 ;                Invoke ConsoleText, Addr szErrorEntry
 ;                Invoke ConsoleText, Addr szErrorBioware_BG
 ;                Invoke ConsoleText, Addr szCRLF
@@ -157,7 +156,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             IFDEF CHECK_EXE_FILEVERSION
             Invoke CheckFileVersion, Addr szBioware_BG2, Addr szBioware_BG2ExeVersion ; "2, 5, 0, 0"
             .IF eax == FALSE
-                .IF StartedMode == TRUE
+                .IF gConsoleStartedMode == TRUE
                     Invoke ConsoleText, Addr szErrorEntry
                     Invoke ConsoleText, Addr szErrorBioware_BG2
                     Invoke ConsoleText, Addr szCRLF
@@ -187,7 +186,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             IFDEF CHECK_EXE_FILEVERSION
             Invoke CheckFileVersion, Addr szBlackIsle_IWD, Addr szBlackIsle_IWDExeVersion ; "1, 4, 2, 0"
             .IF eax == FALSE
-                .IF StartedMode == TRUE
+                .IF gConsoleStartedMode == TRUE
                     Invoke ConsoleText, Addr szErrorEntry
                     Invoke ConsoleText, Addr szErrorBlackIsle_IWD
                     Invoke ConsoleText, Addr szCRLF
@@ -217,7 +216,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             IFDEF CHECK_EXE_FILEVERSION
             Invoke CheckFileVersion, Addr szBlackIsle_IWD2, Addr szBlackIsle_IWD2ExeVersion ; "2, 0, 1, 0"
             .IF eax == FALSE
-                .IF StartedMode == TRUE
+                .IF gConsoleStartedMode == TRUE
                     Invoke ConsoleText, Addr szErrorEntry
                     Invoke ConsoleText, Addr szErrorBlackIsle_IWD2
                     Invoke ConsoleText, Addr szCRLF
@@ -247,7 +246,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             IFDEF CHECK_EXE_FILEVERSION
             Invoke CheckFileVersion, Addr szBlackIsle_PST, Addr szBlackIsle_PSTExeVersion ; "1, 0, 0, 1"
             .IF eax == FALSE
-                .IF StartedMode == TRUE
+                .IF gConsoleStartedMode == TRUE
                     Invoke ConsoleText, Addr szErrorEntry
                     Invoke ConsoleText, Addr szErrorBlackIsle_PST
                     Invoke ConsoleText, Addr szCRLF
@@ -274,7 +273,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         IFDEF DEBUG32
         PrintText 'No IE game'
         ENDIF
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorIEGameEXE
             Invoke ConsoleText, Addr szCRLF
@@ -303,7 +302,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         IFDEF DEBUG32
         PrintText 'No IEex.dll'
         ENDIF
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorIEexDLLFind
             Invoke ConsoleText, Addr szCRLF
@@ -335,7 +334,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             IFDEF DEBUG32
             PrintText 'M__IEex.lua is missing in the override folder - cannot continue.'
             ENDIF
-            .IF StartedMode == TRUE
+            .IF gConsoleStartedMode == TRUE
                 Invoke ConsoleText, Addr szErrorEntry
                 Invoke ConsoleText, Addr szErrorM__IEexMissing
                 Invoke ConsoleText, Addr szCRLF
@@ -366,7 +365,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             IFDEF DEBUG32
             PrintText 'IEex.db is missing - cannot continue.'
             ENDIF
-            .IF StartedMode == TRUE
+            .IF gConsoleStartedMode == TRUE
                 Invoke ConsoleText, Addr szErrorEntry
                 Invoke ConsoleText, Addr szErrorIEexDBMissing
                 Invoke ConsoleText, Addr szCRLF
@@ -384,7 +383,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
     ;--------------------------------------------------------------------------
     ; Prepare Startup info for pipe redirection if IEex.exe started via console
     ;--------------------------------------------------------------------------
-    .IF StartedMode == TRUE ; started via Console
+    .IF gConsoleStartedMode == TRUE ; started via Console
         IFDEF DEBUG32
         PrintText 'Console mode - redirection of child process stdout'
         ENDIF
@@ -417,7 +416,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
     IFDEF DEBUG32
     PrintText 'Launching IE game executable'
     ENDIF
-    .IF StartedMode == TRUE
+    .IF gConsoleStartedMode == TRUE
         Invoke ConsoleText, Addr szStatusEntry
         Invoke ConsoleText, Addr szStatusLaunchingIEGame
         Invoke ConsoleText, lpszIEGame
@@ -434,7 +433,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         ;  
         ; call XXXIEgame:luaL_loadstring replaced with call IEex.dll:IEexLuaInit
         ;----------------------------------------------------------------------
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szStatusEntry
             Invoke ConsoleText, Addr szStatusInjectingDLL
             Invoke ConsoleText, Addr szCRLF
@@ -447,7 +446,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         mov dwExitCode, eax
         Invoke ResumeThread, pi.hThread
 
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             ;------------------------------------------------------------------
             ; Redirect IE game output to our allocated console
             ;------------------------------------------------------------------
@@ -470,8 +469,8 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
 ;            PrintText 'Exit From ReadFromPipe'
 ;            ENDIF                 
             Invoke ConsoleText, Addr szCRLF
-            Invoke ConsoleSendEnterKey
-            Invoke FreeConsole
+            ;Invoke ConsoleSendEnterKey
+            ;Invoke FreeConsole
             Invoke CloseHandle, hChildStd_OUT_Rd
             Invoke CloseHandle, hChildStd_OUT_Wr
             Invoke CloseHandle, hChildStd_IN_Rd
@@ -491,7 +490,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             ret
         .ENDIF
     .ELSE ; CreateProcess failed
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorIEGameExecute
             Invoke ConsoleText, Addr szCRLF
@@ -585,7 +584,7 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     Invoke VirtualAllocEx, hProcess, NULL, szLibPathSize, MEM_COMMIT, PAGE_READWRITE
     mov lpLibAddress, eax
     .IF eax == NULL
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorVirtualAllocEx
             Invoke ConsoleText, Addr szCRLF
@@ -599,7 +598,7 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     
     Invoke WriteProcessMemory, hProcess, lpLibAddress, szDLLPath, szLibPathSize, Addr BytesWritten
     .IF eax == 0
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorWriteProcessMem
             Invoke ConsoleText, Addr szCRLF
@@ -616,7 +615,7 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     Invoke GetModuleHandle, Addr szKernel32Dll
     mov hKernel32, eax
     .IF eax == NULL
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorGetModuleHandle
             Invoke ConsoleText, Addr szCRLF
@@ -631,7 +630,7 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     Invoke GetProcAddress, hKernel32, Addr szLoadLibraryProc
     mov lpStartRoutine, eax        
     .IF eax == NULL
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorGetProcAddress
             Invoke ConsoleText, Addr szCRLF
@@ -650,7 +649,7 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     Invoke CreateRemoteThread, hProcess, NULL, 0, lpStartRoutine, lpLibAddress, 0, Addr dwRemoteThreadID
     mov hRemoteThread, eax
     .IF eax == NULL
-        .IF StartedMode == TRUE
+        .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
             Invoke ConsoleText, Addr szErrorRemoteThread
             Invoke ConsoleText, Addr szCRLF
