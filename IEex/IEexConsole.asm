@@ -50,6 +50,7 @@ IEEX_ALIGN
 ;------------------------------------------------------------------------------
 ConsoleExit PROC
     .IF gConsoleStartedMode == TRUE
+        Invoke ConsoleText, Addr szCRLF
         Invoke ConsoleSendEnterKey
         Invoke FreeConsole
     .ENDIF

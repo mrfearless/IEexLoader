@@ -72,6 +72,11 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
     Invoke RtlZeroMemory, Addr startinfo, SIZEOF STARTUPINFO
     mov startinfo.cb, SIZEOF STARTUPINFO
     
+    ; demo/test
+    ;Invoke DisplayErrorMessage, Addr szErrorInjectDLL, 87d
+    ;ret
+    
+    
     ;--------------------------------------------------------------------------
     ; Check if we can attach a console or not, which helps determine if
     ; we started via explorer or via a command line (cmd)
@@ -92,7 +97,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         Invoke ConsoleText, Addr szCRLF
         Invoke ConsoleText, Addr szCRLF
     .ENDIF
-    
 
     ;--------------------------------------------------------------------------
     ; Check IE game is not already running
@@ -112,8 +116,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
     IFDEF DEBUG32
     PrintText 'Check IE game is not already running'
     ENDIF
-    
-    
+
     ;--------------------------------------------------------------------------
     ; Search for known IE game executables and check file version
     ;--------------------------------------------------------------------------
@@ -145,7 +148,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         PrintText 'No BG'
         ENDIF
     .ENDIF
-    
+
     ; BG2
     .IF bIEGameFound == FALSE
         Invoke FindFirstFile, Addr szBioware_BG2, Addr wfd
@@ -205,7 +208,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             ENDIF
         .ENDIF
     .ENDIF
-    
+
     ; IWD2
     .IF bIEGameFound == FALSE
         Invoke FindFirstFile, Addr szBlackIsle_IWD2, Addr wfd
@@ -235,7 +238,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             ENDIF
         .ENDIF
     .ENDIF
-    
+
     ; PST
     .IF bIEGameFound == FALSE
         Invoke FindFirstFile, Addr szBlackIsle_PST, Addr wfd
@@ -265,7 +268,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
             ENDIF
         .ENDIF
     .ENDIF
-    
+
     ;--------------------------------------------------------------------------
     ; Have we found any IE game exe? Display error message and exit if not
     ;--------------------------------------------------------------------------
@@ -286,8 +289,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         PrintText 'Found IE game'
         ENDIF
     .ENDIF
-    
-    
+
     ;--------------------------------------------------------------------------
     ; Check IEex.dll is present? Display error message and exit if not
     ;--------------------------------------------------------------------------
@@ -312,7 +314,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         ret
     .ENDIF
     ENDIF
-    
+
     ;--------------------------------------------------------------------------
     ; check M__IEex.lua in override folder
     ;--------------------------------------------------------------------------    
@@ -348,7 +350,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
     PrintText 'M__IEex.lua found'
     ENDIF
     ENDIF  
-    
+
     ;--------------------------------------------------------------------------
     ; check IEex.db in current folder
     ;--------------------------------------------------------------------------  
@@ -379,7 +381,7 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
     PrintText 'IEex.db found'
     ENDIF
     ENDIF   
-    
+
     ;--------------------------------------------------------------------------
     ; Prepare Startup info for pipe redirection if IEex.exe started via console
     ;--------------------------------------------------------------------------
@@ -391,25 +393,13 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         mov SecuAttr.nLength, SIZEOF SECURITY_ATTRIBUTES
         mov SecuAttr.lpSecurityDescriptor, NULL
         mov SecuAttr.bInheritHandle, TRUE
-;        
-;        Invoke CreatePipe, Addr hChildStd_OUT_Rd, Addr hChildStd_OUT_Wr, Addr SecuAttr, 0 
-;        Invoke SetHandleInformation, hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0
-;        
-;        Invoke CreatePipe, Addr hChildStd_IN_Rd, Addr hChildStd_IN_Wr, Addr SecuAttr, 0
-;        Invoke SetHandleInformation, hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0
-        
-;        mov eax, hChildStd_OUT_Wr
-;        mov startinfo.hStdError, eax
-;        mov startinfo.hStdOutput, eax
-;        mov eax, hChildStd_IN_Rd
-;        mov startinfo.hStdInput, eax
-;        mov startinfo.dwFlags, STARTF_USESTDHANDLES
+
     .ELSE
         IFDEF DEBUG32
         PrintText 'GUI mode - no console redirection'
         ENDIF    
     .ENDIF
-    
+
     ;--------------------------------------------------------------------------
     ; Launch IE game's executable, ready for injection of our IEex.dll
     ;--------------------------------------------------------------------------
@@ -441,16 +431,36 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         PrintText 'InjectDLL'
         ENDIF
         Invoke InjectDLL, pi.hProcess, Addr szIEexDLL
-        mov dwExitCode, eax
-        Invoke ResumeThread, pi.hThread
-
-        .IF gConsoleStartedMode == TRUE
-            Invoke CloseHandle, hChildStd_OUT_Rd
-            Invoke CloseHandle, hChildStd_OUT_Wr
-            Invoke CloseHandle, hChildStd_IN_Rd
-            Invoke CloseHandle, hChildStd_IN_Wr
+        ;mov dwExitCode, eax
+        .IF eax == TRUE
+            .IF gConsoleStartedMode == TRUE
+                Invoke ConsoleText, Addr szStatusEntry
+                Invoke ConsoleText, Addr szStatusResumeThread
+                Invoke ConsoleText, Addr szCRLF
+            .ENDIF
+            ;------------------------------------------------------------------
+            ; IE Game thread starts up
+            ;------------------------------------------------------------------
+            Invoke ResumeThread, pi.hThread
+            
+            
+            Invoke CloseHandle, pi.hThread
+            Invoke CloseHandle, pi.hProcess
+            
+            Invoke ConsoleSendEnterKey
+            Invoke FreeConsole
+            
+        .ELSE
+            .IF gConsoleStartedMode == TRUE
+                Invoke ConsoleText, Addr szErrorEntry
+                Invoke ConsoleText, Addr szErrorInjectDLL
+                Invoke ConsoleText, Addr szCRLF
+            .ELSE    
+                Invoke GetLastError
+                Invoke DisplayErrorMessage, Addr szErrorInjectDLL, eax
+            .ENDIF
         .ENDIF
-
+        
     .ELSE ; CreateProcess failed
         .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
@@ -467,63 +477,6 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
     ret
 WinMain ENDP
 
-IEEX_ALIGN
-;------------------------------------------------------------------------------
-; EnumWindowsProc - enumerates all top-level windows
-; Search for SDLapp class and if found check window title for IE game
-;------------------------------------------------------------------------------
-EnumWindowsProc PROC USES EBX hWindow:DWORD, lParam:DWORD
-    Invoke GetClassName, hWindow, Addr szClassName, SIZEOF szClassName
-    .IF eax != 0
-        lea ebx, szClassName
-        mov eax, [ebx]
-        .IF eax == 'tihC' ; 'Chit'in reversed ; ChitinClass
-            Invoke GetWindowText, hWindow, Addr szWindowTitle, SIZEOF szWindowTitle
-            .IF eax != 0
-                lea ebx, szWindowTitle
-                mov eax, [ebx]
-                .IF eax == 'dalB' || eax == 'geiS' || eax == 'wecI' || eax == 'nalP' ; Bald, Sieg, Icew, Plan
-                    mov ebx, lParam
-                    mov eax, TRUE
-                    mov [ebx], eax
-                    mov eax, FALSE
-                    ret
-                .ENDIF
-            .ENDIF
-        .ENDIF
-    .ENDIF
-    mov eax, TRUE
-    ret
-EnumWindowsProc ENDP
-
-IEEX_ALIGN
-;------------------------------------------------------------------------------
-; Displays Error Messages
-;------------------------------------------------------------------------------
-DisplayErrorMessage PROC USES EDX szMessage:DWORD, dwError:DWORD
-    LOCAL lpError:DWORD
-    LOCAL nFormatLength:DWORD
-    LOCAL nMessageLength:DWORD
-    LOCAL szFormat[255]:BYTE
-    LOCAL pMessage[255]:BYTE
-    LOCAL dwLanguageId:DWORD
-
-    .IF dwError != 0
-        xor edx, edx
-        mov dl, SUBLANG_DEFAULT
-        shl edx, 10
-        or edx, LANG_NEUTRAL
-        mov dwLanguageId, edx ; dwLanguageId
-        Invoke FormatMessage, FORMAT_MESSAGE_ALLOCATE_BUFFER or FORMAT_MESSAGE_FROM_SYSTEM or FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dwError, edx, Addr lpError, 0, NULL
-        Invoke wsprintf, Addr szErrorMessage, Addr szFormatErrorMessage, lpError
-        Invoke MessageBox, NULL, Addr szErrorMessage, Addr AppName, MB_OK
-        Invoke LocalFree, lpError
-    .ELSE
-        Invoke MessageBox, NULL, szMessage, Addr AppName, MB_OK
-    .ENDIF
-    xor eax, eax
-    ret
-DisplayErrorMessage ENDP
 
 IEEX_ALIGN
 ;------------------------------------------------------------------------------
@@ -540,11 +493,12 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     LOCAL dwRemoteThreadID:DWORD  
     LOCAL dwExitCode:DWORD
     LOCAL ReturnVal:DWORD
-
+    
     Invoke lstrlen, szDLLPath
+    inc eax
     mov szLibPathSize, eax
 
-    Invoke VirtualAllocEx, hProcess, NULL, szLibPathSize+1, MEM_COMMIT, PAGE_READWRITE
+    Invoke VirtualAllocEx, hProcess, NULL, szLibPathSize, MEM_COMMIT or MEM_RESERVE, PAGE_READWRITE
     mov lpLibAddress, eax
     .IF eax == NULL
         .IF gConsoleStartedMode == TRUE
@@ -628,6 +582,10 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     PrintText 'InjectDLL::WaitForSingleObject'
     ENDIF
     
+    .IF gConsoleStartedMode == TRUE
+        Invoke ConsoleText, Addr szCRLF
+    .ENDIF
+    
     Invoke WaitForSingleObject, hRemoteThread, INFINITE
 
     .IF eax == WAIT_ABANDONED
@@ -638,11 +596,11 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
         .ENDIF
         
     .ELSEIF eax == WAIT_OBJECT_0
-;        .IF gConsoleStartedMode == TRUE
-;            Invoke ConsoleText, Addr szStatusEntry
-;            Invoke ConsoleText, Addr szErrorWaitObject0
-;            Invoke ConsoleText, Addr szCRLF
-;        .ENDIF
+        .IF gConsoleStartedMode == TRUE
+            Invoke ConsoleText, Addr szStatusEntry
+            Invoke ConsoleText, Addr szErrorWaitObject0
+            Invoke ConsoleText, Addr szCRLF
+        .ENDIF
 
     .ELSEIF eax == WAIT_TIMEOUT
         .IF gConsoleStartedMode == TRUE
@@ -672,15 +630,16 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     Invoke GetExitCodeThread, hRemoteThread, Addr dwExitCode
     .IF eax == 0
         Invoke GetLastError
-        Invoke DisplayErrorMessage, Addr szErrorExitCodeThreadFailed, 0
+        Invoke DisplayErrorMessage, Addr szErrorGECTFailure, 0
         mov ReturnVal, FALSE
         jmp InjectDLLExit
     .ELSE
-;        .IF gConsoleStartedMode == TRUE
-;            Invoke ConsoleText, Addr szStatusEntry
-;            Invoke ConsoleText, Addr szErrorExitCodeThreadSuccess
-;            Invoke ConsoleText, Addr szCRLF
-;        .ENDIF
+        .IF gConsoleStartedMode == TRUE
+            Invoke ConsoleText, Addr szStatusEntry
+            Invoke ConsoleText, Addr szStatusGECTSuccess
+            Invoke ConsoleText, Addr szCRLF
+        .ENDIF
+        mov ReturnVal, TRUE
     .ENDIF
     
     mov eax, dwExitCode
@@ -698,7 +657,7 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     .ELSEIF eax == TRUE
         .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
-            Invoke ConsoleText, Addr szErrorRemoteThreadExitTrue
+            Invoke ConsoleText, Addr szStatusThreadExitTrue
             Invoke ConsoleText, Addr szCRLF
         .ENDIF
         mov ReturnVal, TRUE
@@ -706,7 +665,7 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     .ELSEIF eax == FALSE
         .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
-            Invoke ConsoleText, Addr szErrorRemoteThreadExitFalse
+            Invoke ConsoleText, Addr szErrorThreadExitFail
             Invoke ConsoleText, Addr szCRLF
         .ENDIF
         mov ReturnVal, FALSE
@@ -717,11 +676,42 @@ InjectDLLExit:
     
     Invoke CloseHandle, hRemoteThread
     Invoke VirtualFreeEx, hProcess, lpLibAddress, 0, MEM_RELEASE
-    Invoke CloseHandle, hProcess
+    ;Invoke CloseHandle, hProcess
 
     mov eax, ReturnVal    
     ret
 InjectDLL endp
+
+
+IEEX_ALIGN
+;------------------------------------------------------------------------------
+; EnumWindowsProc - enumerates all top-level windows
+; Search for SDLapp class and if found check window title for IE game
+;------------------------------------------------------------------------------
+EnumWindowsProc PROC USES EBX hWindow:DWORD, lParam:DWORD
+    Invoke GetClassName, hWindow, Addr szClassName, SIZEOF szClassName
+    .IF eax != 0
+        lea ebx, szClassName
+        mov eax, [ebx]
+        .IF eax == 'tihC' ; 'Chit'in reversed ; ChitinClass
+            Invoke GetWindowText, hWindow, Addr szWindowTitle, SIZEOF szWindowTitle
+            .IF eax != 0
+                lea ebx, szWindowTitle
+                mov eax, [ebx]
+                .IF eax == 'dalB' || eax == 'geiS' || eax == 'wecI' || eax == 'nalP' ; Bald, Sieg, Icew, Plan
+                    mov ebx, lParam
+                    mov eax, TRUE
+                    mov [ebx], eax
+                    mov eax, FALSE
+                    ret
+                .ENDIF
+            .ENDIF
+        .ENDIF
+    .ENDIF
+    mov eax, TRUE
+    ret
+EnumWindowsProc ENDP
+
 
 IEEX_ALIGN
 ;------------------------------------------------------------------------------
@@ -830,6 +820,33 @@ CheckFileVersion endp
 ENDIF
 
 
+IEEX_ALIGN
+;------------------------------------------------------------------------------
+; Displays Error Messages
+;------------------------------------------------------------------------------
+DisplayErrorMessage PROC USES EDX lpszMessage:DWORD, dwError:DWORD
+    LOCAL lpError:DWORD
+    LOCAL dwLanguageId:DWORD
+
+    .IF dwError != 0
+        xor edx, edx
+        mov dl, SUBLANG_DEFAULT
+        shl edx, 10
+        or edx, LANG_NEUTRAL
+        mov dwLanguageId, edx ; dwLanguageId
+        Invoke FormatMessage, FORMAT_MESSAGE_ALLOCATE_BUFFER or FORMAT_MESSAGE_FROM_SYSTEM or FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dwError, edx, Addr lpError, 0, NULL
+        Invoke wsprintf, Addr szFormatErrorMessage, Addr szFmtError, lpError, dwError
+        Invoke lstrcpy, Addr szErrorMessage, lpszMessage
+        Invoke lstrcat, Addr szErrorMessage, Addr szCRLF
+        Invoke lstrcat, Addr szErrorMessage, Addr szFormatErrorMessage
+        Invoke MessageBox, NULL, Addr szErrorMessage, Addr AppName, MB_OK
+        Invoke LocalFree, lpError
+    .ELSE
+        Invoke MessageBox, NULL, lpszMessage, Addr AppName, MB_OK
+    .ENDIF
+    xor eax, eax
+    ret
+DisplayErrorMessage ENDP
 
 
 

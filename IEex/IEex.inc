@@ -44,7 +44,7 @@ IEEX_ALIGN              TEXTEQU <ALIGN 16>
 ;------------------------------------------------------------------------------
 AppName                 DB "IEex loader",0
 szAppName               DB "[IEex loader]",0
-szAppVersion            DB " v1.0.0.9",0
+szAppVersion            DB " v1.0.0.10",0
 szIEexLoaderByfearless  DB "IEex loader by fearless: github.com/mrfearless/IEexLoader",0
 szIEexByBubb            DB "IEex by Bubb: github.com/Bubb13/IEex",0
 szCRLF                  DB 13,10,0
@@ -82,7 +82,7 @@ szVerRoot               DB "\\",0
 szLang                  DB "\VarFileInfo\Translation",0
 szProductVersion        DB "\StringFileInfo\%04x%04x\ProductVersion",0
 szFileVersion           DB "%d.%d.%d.%d",0
-szFormatErrorMessage    DB 'Error: ', '%s', 0
+szFmtError              DB "Error Message: %sError Code: %i",0
 
 ;------------------------------------------------------------------------------
 ; Error Strings
@@ -121,15 +121,17 @@ szErrorWaitObject0      DB "InjectDLL: WaitForSingleObject success. ",0
 szErrorWaitTimeout      DB "InjectDLL: WaitForSingleObject timed out. ",0
 szErrorWaitFailed       DB "InjectDLL: WaitForSingleObject failed. ",0
 szErrorWaitSingleInv    DB "InjectDLL: WaitForSingleObject returned invalid value. ",0
-szErrorExitCodeThreadFailed   DB "InjectDLL: GetExitCodeThread failed. ",0
-szErrorExitCodeThreadSuccess   DB "InjectDLL: GetExitCodeThread success. ",0
+szErrorGECTFailure      DB "InjectDLL: GetExitCodeThread failed. ",0
 szErrorThreadActive     DB "InjectDLL: hRemoteThread still active. ",0
-szErrorRemoteThreadExitTrue DB "InjectDLL::CreateRemoteThread::LoadLibrary success. ", 0
-szErrorRemoteThreadExitFalse DB "InjectDLL::CreateRemoteThread::LoadLibrary failed. ", 0
+szErrorThreadExitFail   DB "InjectDLL: LoadLibrary in remote thread failed. ", 0
+szErrorInjectDLL        DB "An error occured whilst attempting to inject IEex.dll. ",0
 
+; Status Messages:
 szStatusLaunchingIEGame DB "Launching IE game executable: ",0
 szStatusInjectingDLL    DB "Injecting IEex.dll into IE game executable.",0
-szStatusRedirectCon     DB "Redirecting console output of IE game executable: ",0
+szStatusResumeThread    DB "Resuming IE game thread.",0
+szStatusGECTSuccess     DB "InjectDLL: GetExitCodeThread success. ",0
+szStatusThreadExitTrue  DB "InjectDLL: LoadLibrary in remote thread success. ", 0
 
 szCurrentFolder         DB MAX_PATH DUP (0)
 szIEGameEXE             DB MAX_PATH DUP (0)
@@ -148,7 +150,8 @@ szFileIEexDB            DB MAX_PATH DUP (0)
 szFileVersionBuffer     DB 64 DUP (?)
 szClassName             DB MAX_PATH DUP (?)
 szWindowTitle           DB MAX_PATH DUP (?)
-szErrorMessage          DB 512 DUP (?)
+szFormatErrorMessage    DB 512 DUP (?)
+szErrorMessage          DB 1024 DUP (?)
 hInstance               DD ?
 CommandLine             DD ?
 hWnd                    DD ?
