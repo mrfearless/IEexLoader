@@ -44,7 +44,7 @@ IEEX_ALIGN              TEXTEQU <ALIGN 16>
 ;------------------------------------------------------------------------------
 AppName                 DB "IEex loader",0
 szAppName               DB "[IEex loader]",0
-szAppVersion            DB " v1.0.0.7",0
+szAppVersion            DB " v1.0.0.8",0
 szIEexLoaderByfearless  DB "IEex loader by fearless: github.com/mrfearless/IEexLoader",0
 szIEexByBubb            DB "IEex by Bubb: github.com/Bubb13/IEex",0
 szCRLF                  DB 13,10,0
@@ -116,10 +116,16 @@ szErrorWriteProcessMem  DB "InjectDLL: WriteProcessMemory failed. ",0
 szErrorGetModuleHandle  DB "InjectDLL: GetModuleHandle failed. ",0
 szErrorGetProcAddress   DB "InjectDLL: GetProcAddress failed. ",0
 szErrorRemoteThread     DB "InjectDLL: CreateRemoteThread failed. ", 0
-szErrorWaitSingleObj    DB "InjectDLL: WaitForSingleObject failed. ",0
+szErrorWaitAbandoned    DB "InjectDLL: WaitForSingleObject abandoned. ",0
+szErrorWaitObject0      DB "InjectDLL: WaitForSingleObject success. ",0
+szErrorWaitTimeout      DB "InjectDLL: WaitForSingleObject timed out. ",0
+szErrorWaitFailed       DB "InjectDLL: WaitForSingleObject failed. ",0
 szErrorWaitSingleInv    DB "InjectDLL: WaitForSingleObject returned invalid value. ",0
-szErrorExitCodeThread   DB "InjectDLL: GetExitCodeThread failed. ",0
+szErrorExitCodeThreadFailed   DB "InjectDLL: GetExitCodeThread failed. ",0
+szErrorExitCodeThreadSuccess   DB "InjectDLL: GetExitCodeThread success. ",0
 szErrorThreadActive     DB "InjectDLL: hRemoteThread still active. ",0
+szErrorRemoteThreadExitTrue DB "InjectDLL::CreateRemoteThread::LoadLibrary success. ", 0
+szErrorRemoteThreadExitFalse DB "InjectDLL::CreateRemoteThread::LoadLibrary failed. ", 0
 
 szStatusLaunchingIEGame DB "Launching IE game executable: ",0
 szStatusInjectingDLL    DB "Injecting IEex.dll into IE game executable.",0

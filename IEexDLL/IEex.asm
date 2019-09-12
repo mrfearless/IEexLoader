@@ -81,7 +81,6 @@ IEexInitDll PROC USES EBX
     
     Invoke IEexInitGlobals
     .IF eax == FALSE
-        Invoke TerminateProcess, hIEGameProcess, NULL
         ret ; error occured - probably lua.dll not found/loaded
     .ENDIF
     
@@ -154,7 +153,6 @@ IEexInitDll PROC USES EBX
                     Invoke LogClose
                 .ENDIF
                 ENDIF
-                Invoke TerminateProcess, hIEGameProcess, NULL
                 ret ; Exit EEexInitDll
             .ENDIF
         .ELSE ; IMAGE_DOS_SIGNATURE Failed
@@ -165,7 +163,6 @@ IEexInitDll PROC USES EBX
                 Invoke LogClose
             .ENDIF
             ENDIF
-            Invoke TerminateProcess, hIEGameProcess, NULL
             ret ; Exit IEexInitDll
         .ENDIF
     .ELSE ; GetModuleInformation Failed
@@ -176,7 +173,6 @@ IEexInitDll PROC USES EBX
             Invoke LogClose
         .ENDIF
         ENDIF
-        Invoke TerminateProcess, hIEGameProcess, NULL
         ret ; Exit IEexInitDll
     .ENDIF
     ;--------------------------------------------------------------------------

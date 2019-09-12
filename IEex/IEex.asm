@@ -428,14 +428,12 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         ; Inject IEex.dll into IE game and resume IE game execution
         ;
         ; IEex.dll will be loaded by IE game and call its DllEntry procedure
-        ; which will call IEex.dll:IEexInitDll to begin searching for lua
-        ; functions and patching the IE game to redirect a call to IEexLuaInit
-        ;  
-        ; call XXXIEgame:luaL_loadstring replaced with call IEex.dll:IEexLuaInit
+        ; which will call IEex.dll:IEexInitDll
         ;----------------------------------------------------------------------
         .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szStatusEntry
             Invoke ConsoleText, Addr szStatusInjectingDLL
+            Invoke ConsoleText, Addr szCRLF
             Invoke ConsoleText, Addr szCRLF
         .ENDIF
 
@@ -447,48 +445,12 @@ WinMain PROC USES EBX hInst:HINSTANCE, hPrevInst:HINSTANCE, CmdLine:LPSTR, CmdSh
         Invoke ResumeThread, pi.hThread
 
         .IF gConsoleStartedMode == TRUE
-            ;------------------------------------------------------------------
-            ; Redirect IE game output to our allocated console
-            ;------------------------------------------------------------------
-            ;mov childconsolesize.x, 80
-            ;mov childconsolesize.y, 1
-            ;Invoke SetConsoleScreenBufferSize, hChildStd_OUT_Rd, Addr childconsolesize
-            
-;            Invoke ConsoleText, Addr szStatusEntry
-;            Invoke ConsoleText, Addr szStatusRedirectCon
-;            Invoke ConsoleText, Addr szCRLF
-;            Invoke ConsoleText, Addr szCRLF
-;            
-;            IFDEF DEBUG32
-;            PrintText 'ReadFromPipe'
-;            ENDIF            
-;
-;            ;Invoke ReadFromPipe
-;            
-;            IFDEF DEBUG32
-;            PrintText 'Exit From ReadFromPipe'
-;            ENDIF                 
-            Invoke ConsoleText, Addr szCRLF
-            ;Invoke ConsoleSendEnterKey
-            ;Invoke FreeConsole
             Invoke CloseHandle, hChildStd_OUT_Rd
             Invoke CloseHandle, hChildStd_OUT_Wr
             Invoke CloseHandle, hChildStd_IN_Rd
             Invoke CloseHandle, hChildStd_IN_Wr
-            .IF hLogFile != 0
-                Invoke CloseHandle, hLogFile
-            .ENDIF
         .ENDIF
 
-;        IFDEF DEBUG32
-;        PrintText 'CloseHandle for thread and process'
-;        ENDIF  
-
-        ;Invoke CloseHandle, pi.hThread
-        ;Invoke CloseHandle, pi.hProcess
-        .IF dwExitCode != TRUE
-            ret
-        .ENDIF
     .ELSE ; CreateProcess failed
         .IF gConsoleStartedMode == TRUE
             Invoke ConsoleText, Addr szErrorEntry
@@ -577,6 +539,7 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     LOCAL hRemoteThread:DWORD
     LOCAL dwRemoteThreadID:DWORD  
     LOCAL dwExitCode:DWORD
+    LOCAL ReturnVal:DWORD
 
     Invoke lstrlen, szDLLPath
     mov szLibPathSize, eax
@@ -668,42 +631,95 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     Invoke WaitForSingleObject, hRemoteThread, INFINITE
 
     .IF eax == WAIT_ABANDONED
+        .IF gConsoleStartedMode == TRUE
+            Invoke ConsoleText, Addr szErrorEntry
+            Invoke ConsoleText, Addr szErrorWaitAbandoned
+            Invoke ConsoleText, Addr szCRLF
+        .ENDIF
         
     .ELSEIF eax == WAIT_OBJECT_0
+;        .IF gConsoleStartedMode == TRUE
+;            Invoke ConsoleText, Addr szStatusEntry
+;            Invoke ConsoleText, Addr szErrorWaitObject0
+;            Invoke ConsoleText, Addr szCRLF
+;        .ENDIF
 
     .ELSEIF eax == WAIT_TIMEOUT
+        .IF gConsoleStartedMode == TRUE
+            Invoke ConsoleText, Addr szErrorEntry
+            Invoke ConsoleText, Addr szErrorWaitTimeout
+            Invoke ConsoleText, Addr szCRLF
+        .ENDIF
     
     .ELSEIF eax == WAIT_FAILED
-        Invoke GetLastError
-        Invoke DisplayErrorMessage, Addr szErrorWaitSingleObj, eax
-        mov eax, FALSE
-        ret    
+        .IF gConsoleStartedMode == TRUE
+            Invoke ConsoleText, Addr szErrorEntry
+            Invoke ConsoleText, Addr szErrorWaitFailed
+            Invoke ConsoleText, Addr szCRLF
+        .ELSE
+            Invoke GetLastError
+            Invoke DisplayErrorMessage, Addr szErrorWaitFailed, eax
+        .ENDIF
+        mov ReturnVal, FALSE
+        jmp InjectDLLExit    
     .ELSE    
         Invoke GetLastError
         Invoke DisplayErrorMessage, Addr szErrorWaitSingleInv, 0
-        mov eax, FALSE
-        ret               
+        mov ReturnVal, FALSE
+        jmp InjectDLLExit               
     .ENDIF
 
     Invoke GetExitCodeThread, hRemoteThread, Addr dwExitCode
     .IF eax == 0
         Invoke GetLastError
-        Invoke DisplayErrorMessage, Addr szErrorExitCodeThread, 0
-        mov eax, FALSE
-        ret   
+        Invoke DisplayErrorMessage, Addr szErrorExitCodeThreadFailed, 0
+        mov ReturnVal, FALSE
+        jmp InjectDLLExit
+    .ELSE
+;        .IF gConsoleStartedMode == TRUE
+;            Invoke ConsoleText, Addr szStatusEntry
+;            Invoke ConsoleText, Addr szErrorExitCodeThreadSuccess
+;            Invoke ConsoleText, Addr szCRLF
+;        .ENDIF
+    .ENDIF
+    
+    mov eax, dwExitCode
+    .IF eax == STILL_ACTIVE
+        .IF gConsoleStartedMode == TRUE
+            Invoke ConsoleText, Addr szErrorEntry
+            Invoke ConsoleText, Addr szErrorThreadActive
+            Invoke ConsoleText, Addr szCRLF
+        .ELSE
+            Invoke GetLastError
+            Invoke DisplayErrorMessage, Addr szErrorThreadActive, 0
+        .ENDIF
+        mov ReturnVal, FALSE
+    
+    .ELSEIF eax == TRUE
+        .IF gConsoleStartedMode == TRUE
+            Invoke ConsoleText, Addr szErrorEntry
+            Invoke ConsoleText, Addr szErrorRemoteThreadExitTrue
+            Invoke ConsoleText, Addr szCRLF
+        .ENDIF
+        mov ReturnVal, TRUE
+        
+    .ELSEIF eax == FALSE
+        .IF gConsoleStartedMode == TRUE
+            Invoke ConsoleText, Addr szErrorEntry
+            Invoke ConsoleText, Addr szErrorRemoteThreadExitFalse
+            Invoke ConsoleText, Addr szCRLF
+        .ENDIF
+        mov ReturnVal, FALSE
+        
     .ENDIF
 
-    .IF dwExitCode == STILL_ACTIVE
-        Invoke GetLastError
-        Invoke DisplayErrorMessage, Addr szErrorThreadActive, 0
-        mov eax, FALSE
-        ret       
-    .ENDIF
+InjectDLLExit:
     
     Invoke CloseHandle, hRemoteThread
     Invoke VirtualFreeEx, hProcess, lpLibAddress, 0, MEM_RELEASE
+    Invoke CloseHandle, hProcess
 
-    mov eax, dwExitCode    
+    mov eax, ReturnVal    
     ret
 InjectDLL endp
 
