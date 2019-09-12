@@ -544,7 +544,7 @@ InjectDLL PROC hProcess:HANDLE, szDLLPath:DWORD
     Invoke lstrlen, szDLLPath
     mov szLibPathSize, eax
 
-    Invoke VirtualAllocEx, hProcess, NULL, szLibPathSize, MEM_COMMIT, PAGE_READWRITE
+    Invoke VirtualAllocEx, hProcess, NULL, szLibPathSize+1, MEM_COMMIT, PAGE_READWRITE
     mov lpLibAddress, eax
     .IF eax == NULL
         .IF gConsoleStartedMode == TRUE
